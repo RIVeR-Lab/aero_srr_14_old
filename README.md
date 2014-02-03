@@ -39,6 +39,7 @@ wstool update
 cd ..
 catkin_make
 ```
+You can also checkout all of the repositories using ssh by using the following url in the ```wstool merge``` command above. ```http://users.wpi.edu/~mwills/aero_srr_14_ssh.rosinstall```
 
 Add ```source devel/setup.bash``` to the end of your ```.bashrc``` file so that your package path is setup properly
 
