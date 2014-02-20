@@ -13,7 +13,7 @@ This repo maintains the a collection of ROS packages used for the 2014 SRR Chall
 You can install all dependancies (after initially installing ROS) by running the following:
 ```
 sudo apt-get install ros-hydro-desktop-full ros-hydro-ros-control ros-hydro-ros-controllers ros-hydro-husky-desktop
-sudo apt-get install ros-hydro-gazebo-ros-control ros-hydro-robot-state-publisher libsensors4-dev libncurses5-dev
+sudo apt-get install ros-hydro-gazebo-ros-control ros-hydro-robot-state-publisher libsensors4-dev libncurses5-dev ros-hydro-prosilica-camera
 ```
 
 ###Installing aero_srr_14 source
