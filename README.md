@@ -41,7 +41,7 @@ catkin_make
 ```
 You can also checkout all of the repositories using ssh by using the following url in the ```wstool merge``` command above. ```http://users.wpi.edu/~mwills/aero_srr_14_ssh.rosinstall```
 
-Add ```source devel/setup.bash``` to the end of your ```.bashrc``` file so that your package path is setup properly
+Add ```source ~/srr/devel/setup.bash``` to the end of your ```.bashrc``` file so that your package path is setup properly
 
 ###Running the Simulator
 To launch the aero robot in the gazebo simulator run the following command
