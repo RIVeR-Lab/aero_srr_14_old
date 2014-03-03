@@ -1,0 +1,18 @@
+<package>
+  <description brief="aero_srr_sm">
+
+     aero_srr_sm
+
+  </description>
+  <author>Mitchell Wills</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/aero_srr_sm</url>
+  <depend package="rospy"/>
+  <depend package="smach"/>
+  <depend package="smach_ros"/>
+  <depend package="actionlib"/>
+
+</package>
+
+
