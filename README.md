@@ -16,8 +16,9 @@ sudo apt-get install ros-hydro-desktop-full ros-hydro-ros-control ros-hydro-ros-
 sudo apt-get install ros-hydro-gazebo-ros-control ros-hydro-robot-state-publisher libsensors4-dev libncurses5-dev ros-hydro-prosilica-camera 
 ```
 
-Installing GLEW
+###Installing GLEW
 install latest version of libglew
+
 http://jasonjuang.blogspot.com/2013/10/adding-findglewcmake-to-cmake-in-ubuntu.html
 
 
