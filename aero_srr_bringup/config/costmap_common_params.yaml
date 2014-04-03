@@ -1,0 +1,11 @@
+obstacle_range: 4.0
+raytrace_range: 5.0
+footprint: [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]
+inflation_radius: 1.5
+
+observation_sources: laser_scan_sensor
+
+laser_scan_sensor: {sensor_frame: aero/laser_link, data_type: LaserScan, topic: /aero/laser, marking: true, clearing: true}
+
+global_frame: aero/odom
+robot_base_frame: aero/base_link
