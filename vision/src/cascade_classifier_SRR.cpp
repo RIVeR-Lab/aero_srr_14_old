@@ -7,7 +7,8 @@ using namespace sensor_msgs;
 cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified")
     {
         // Subscribe to input video feed and publish output video feed
-        m_image_sub_left = it_.subscribe("camera/image", 1, &cascade_classifier_node::m_imageCb, this);
+     //   m_image_sub_left = it_.subscribe("camera/image", 1, &cascade_classifier_node::m_imageCb, this);
+	m_image_sub_left = it_.subscribe("/stereo/left/image_raw",1, &cascade_classifier_node::m_imageCb, this);
        // m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
         cv::namedWindow(m_LeftCameraView);
     }
