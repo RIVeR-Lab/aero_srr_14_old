@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="rqt_gui" type="rqt_gui" respawn="false" name="$(anon aero_rqt)" output="screen" args="--perspective-file $(find aero_srr_bringup)/perspectives/aero_diagnostics.perspective"/>
+</launch>
