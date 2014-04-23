@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="rviz" type="rviz" respawn="false" name="$(anon aero_rviz)" output="screen" args="-d $(find aero_srr_bringup)/aero_srr.rviz"/>
+</launch>
