@@ -4,7 +4,7 @@ project(vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge)
+find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -79,7 +79,7 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES vision
-  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge
+  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs
 #  DEPENDS OpenCV image_transport nodelet roscpp
 )
 
