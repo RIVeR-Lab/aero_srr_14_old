@@ -14,26 +14,9 @@ import math
 import tf2_ros
 import tf
 
-# define state Foo
-class FakeState(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'])
-
-    def execute(self, userdata):
-        rospy.loginfo('Executing fake state ')
-        outcome = ''
-        while outcome not in self.get_registered_outcomes():
-            print 'enter a possible outcome: '+str(self.get_registered_outcomes())
-            outcome = raw_input('Enter state outcome: ');
-            if outcome == 's':
-                outcome = 'succeeded';
-            if outcome == 'a':
-                outcome = 'aborted';
-            if outcome == 'p':
-                outcome = 'preempted';
-        return outcome
-        
-
+from fake_state import *
+from move_state_util import *
+from arm_state_util import *
 
 
 # main
@@ -51,38 +34,13 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        leave_platform_goal_angle = tf.transformations.quaternion_from_euler(0, 0, math.pi/2);
-        leave_platform_goal=MoveBaseGoal(
-            target_pose=PoseStamped(
-                header = Header(frame_id="aero/odom"),
-                pose   = Pose(
-                    position = Point(x = 3, y = 20, z = 0),
-                    orientation = Quaternion(x = leave_platform_goal_angle[0],
-                                             y = leave_platform_goal_angle[1],
-                                             z = leave_platform_goal_angle[2],
-                                             w = leave_platform_goal_angle[3]),
-                    )
-            ));
-        towards_precache_goal_angle = tf.transformations.quaternion_from_euler(0, 0, math.pi);
-        towards_precache_goal=MoveBaseGoal(
-            target_pose=PoseStamped(
-                header = Header(frame_id="aero/odom"),
-                pose   = Pose(
-                    position = Point(x = -20, y = 10, z = 0),
-                    orientation = Quaternion(x = towards_precache_goal_angle[0],
-                                             y = towards_precache_goal_angle[1],
-                                             z = towards_precache_goal_angle[2],
-                                             w = towards_precache_goal_angle[3]),
-                    )
-            ));
-
         smach.StateMachine.add('LEAVE_PLATFORM',
-                               smach_ros.SimpleActionState('/aero/move_base', MoveBaseAction, leave_platform_goal),
+                               create_move_state(3, 20, math.pi/2),
                                transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
-                               smach_ros.SimpleActionState('/aero/move_base', MoveBaseAction, towards_precache_goal),
+                               create_move_state(-20, 10, math.pi),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
