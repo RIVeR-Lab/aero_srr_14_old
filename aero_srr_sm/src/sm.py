@@ -89,7 +89,7 @@ def main():
                                             'aborted':'NAV_TO_PLATFORM',
                                             'preempted':'failed'})
 
-    sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
+    sis = smach_ros.IntrospectionServer('aero_srr_sm', sm, '/SM_ROOT')
     sis.start()
 
     # Execute SMACH plan
