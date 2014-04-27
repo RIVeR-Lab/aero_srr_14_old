@@ -29,9 +29,11 @@ def main():
     # Open the container
     with sm:
         # Add states to the container
-        smach.StateMachine.add('INIT', FakeState(),
-                               transitions={'succeeded':'LEAVE_PLATFORM',
-                                            'aborted':'failed',
+        smach.StateMachine.add('WAIT_FOR_IMU',
+                               smach_ros.MonitorState("/aero/imu/is_calibrated", Bool, lambda ud, msg: not msg.data),
+        #becomes invalid when callback is false
+                               transitions={'invalid':'LEAVE_PLATFORM',
+                                            'valid':'failed',
                                             'preempted':'failed'})
 
         smach.StateMachine.add('LEAVE_PLATFORM',
