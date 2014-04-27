@@ -1,0 +1,27 @@
+<launch>
+  <node pkg="beacon_detector" type="beacon_detector_node" respawn="true" name="beacon_detector" output="screen" ns="aero">
+    <rosparam param="tag_locations">[
+      {id: 8, x: -0.33655, y: 0.0, z: .322263, roll: -1.57, pitch: 1.57, yaw: 1.57},
+      {id: 105, x: 0.33655, y: 0.0, z: 0.322263, roll: -1.57, pitch: -1.57, yaw: -1.57},
+      {id: 400, x: -0.168275, y: -0.322263, z: 0.1611315, roll: 0.0, pitch: 0.0, yaw: 1.57},
+      {id: 300, x: -0.168275, y: -0.322263, z: 0.4833945, roll: 0.0, pitch: 0.0, yaw: 1.57},
+      {id: 444, x: -0.168275, y: 0.322263, z: 0.1611315, roll: 0.0, pitch: 0.0, yaw: -1.57},
+      {id: 555, x: -0.168275, y: 0.322263, z: 0.4833945, roll: 0.0, pitch: 0.0, yaw: -1.57},
+      {id: 333, x: -0.168275, y: 0.1611315, z: 0.644525, roll: 0.0, pitch: 0.0, yaw: 0.0},
+      {id: 222, x: -0.168275, y: -0.1611315, z: 0.644525, roll: 0.0, pitch: 0.0, yaw: 0.0}]
+    </rosparam>
+  </node>
+  <node pkg="apriltags_ros" type="apriltag_detector_node" respawn="true" name="apriltag_detector" output="screen" ns="aero">
+    <remap from="image" to="/stereo/right/image_rect"/>
+    <rosparam param="tag_descriptions">[
+      {id: 400, size: 0.2667},
+      {id: 300, size: 0.2667},
+      {id: 444, size: 0.2667},
+      {id: 555, size: 0.2667},
+      {id: 333, size: 0.2667},
+      {id: 222, size: 0.2667},
+      {id:   8, size: 0.5588},
+      {id: 105, size: 0.5588}]
+    </rosparam>
+  </node>
+</launch>
