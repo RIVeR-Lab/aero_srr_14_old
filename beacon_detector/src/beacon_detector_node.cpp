@@ -97,7 +97,7 @@ std::map<int, tf::Transform> parse_tag_locations(XmlRpc::XmlRpcValue& tag_descri
     double z = (double)tag_description["z"];
     double roll = (double)tag_description["roll"];
     double pitch = (double)tag_description["pitch"];
-    double yaw = (double)tag_description["yah"];
+    double yaw = (double)tag_description["yaw"];
 
 
     tf::Transform tag_transform(tf::createQuaternionFromRPY(roll, pitch, yaw), tf::Vector3(x, y, z));
