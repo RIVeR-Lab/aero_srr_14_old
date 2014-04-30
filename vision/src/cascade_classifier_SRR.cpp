@@ -1,16 +1,19 @@
 #include <cascade_classifier_SRR.h>
 
+
 using namespace std;
 using namespace cv;
 using namespace sensor_msgs;
+using namespace vision;
 
-cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified"), m_leftCbTrig(false), m_rightCbTrig(false), m_stereoModelNotConfigured(true)
+cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified"), m_leftCbTrig(false), m_rightCbTrig(false), m_stereoModelNotConfigured(true), CascadeManager(.25,.15,.05,.5,2.0), AeroManager(1.5, .20, .10,.25,.25)
     {
         // Subscribe to input video feed and publish output video feed
      //   m_image_sub_left = it_.subscribe("camera/image", 1, &cascade_classifier_node::m_imageCb, this);
-	m_image_sub_left = it_.subscribeCamera("/stereo/left/image_raw",1, &cascade_classifier_node::m_imageCb, this);
-	m_image_sub_right = it_.subscribeCamera("/stereo/right/image_raw",1, &cascade_classifier_node::m_imageCbRight, this);
-        m_disp_sub = it_.subscribe("/stereo/disparity", 1, &cascade_classifier_node::m_dispCb, this);
+	m_image_sub_left = it_.subscribeCamera("/aero/lower_stereo/left/image_raw",20, &cascade_classifier_node::m_imageCb, this);
+	m_image_sub_right = it_.subscribeCamera("/aero/lower_stereo/right/image_raw",20, &cascade_classifier_node::m_imageCbRight, this);
+        m_disp_sub.subscribe(nh_,"/aero/lower_stereo/disparity", 3);
+	m_disp_sub.registerCallback(&cascade_classifier_node::m_dispCb,this);
        // m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
         cv::namedWindow(m_LeftCameraView);
     }
@@ -35,8 +38,8 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         cv::cvtColor(frame, frame_gray, CV_RGB2GRAY);
         cv::equalizeHist(frame_gray, frame_gray);
 
-        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.1, 155, 0,
-                    cv::Size(40, 40), cv::Size(100, 100));
+        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.1, 15, 0,
+                    cv::Size(40, 40), cv::Size(90, 90));
 
         for (int i = 0; i < WHA_faces.size(); i++)
         {
@@ -54,8 +57,13 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
                                 center.y + WHA_faces[i].height / 2),
                           cv::Scalar(255, 0, 0));
 
-		m_computeDisparityPoint(center.x, center.y);
+		DetectionPtr_t newDetection(new Detection_t());
+		newDetection->first.first = center.x;
+		newDetection->first.second = center.y;
+		newDetection->second = WHA;
+		detection_list_.push_back(newDetection);
         }
+	
         cv::line(frame,cv::Point2d(0,HORIZON),cv::Point2d(frame_gray.cols,HORIZON),cv::Scalar(0,255,0));
         cv::imshow(m_LeftCameraView, frame);
         cv::waitKey(3);
@@ -65,21 +73,60 @@ void cascade_classifier_node::m_configStereoModel()
 {
 	this->stereo_model.fromCameraInfo(this->left_info, this->right_info);
 }
-void cascade_classifier_node::m_computeDisparityPoint(double x, double y)
+void cascade_classifier_node::m_computeDisparityPoint()
     {
-   	
+   	if(!m_disp_ptr)
+		return;
    	cv::Mat disp_frame;
 	disp_frame = m_disp_ptr->image;
-	Point2d obj_centroid(x,y);
-	Point3d obj_3d;
-	float disp_val = disp_frame.at<float>(obj_centroid.y, obj_centroid.x);
+	geometry_msgs::PointStamped camera_point, world_point, robot_point;
+
+	for (int i = 0; i < (int) detection_list_.size(); i++) {
+		Point2d obj_centroid(detection_list_.at(i)->first.first,
+			detection_list_.at(i)->first.second);
+		Point3d obj_3d;
+		float disp_val = disp_frame.at<float>(obj_centroid.y, obj_centroid.x);
+	cout << "Disparity value at " << obj_centroid.x <<","<< obj_centroid.y<< " is " << disp_val <<endl;
 	this->stereo_model.projectDisparityTo3d(obj_centroid, disp_val,
 obj_3d);
-
+	tf::Point detection(obj_3d.x, obj_3d.y, obj_3d.z);
 	cout << "Detection at "<< obj_3d.x << "," << obj_3d.y << "," << obj_3d.z <<endl;
 
-	
+	tf::pointTFToMsg(detection, camera_point.point);
+	ros::Time tZero(0);
+	camera_point.header.frame_id = "/lower_stereo_optical_frame";
+	camera_point.header.stamp = left_image.header.stamp;
 
+	robot_point.header.frame_id = "/base_footprint";
+	robot_point.header.stamp = left_image.header.stamp;
+
+	world_point.header.frame_id = "/world";
+	world_point.header.stamp = left_image.header.stamp;
+
+	try
+	{
+		optimus_prime.waitForTransform("/world",
+		camera_point.header.frame_id, camera_point.header.stamp,
+		ros::Duration(10.0));
+		optimus_prime.transformPoint("/world", camera_point, world_point);
+		optimus_prime.transformPoint("/base_footprint",camera_point,robot_point);
+	}
+	catch(std::exception& e)
+	{
+	ROS_ERROR_STREAM(e.what());
+	}
+	tf::Point robot_rel_detection;
+	tf::pointMsgToTF(world_point.point, detection);
+	tf::pointMsgToTF(robot_point.point, robot_rel_detection);
+
+	CascadeManager.addDetection(detection, detection_list_.at(i)->second);
+	//AeroManager.addAndReplaceDetection(robot_rel_detection, WHA);
+	}
+
+	tf::Point detection;
+	tf::Point robot_rel_det;
+	detection_list_.clear();
+	CascadeManager.shrink();
     }
 
 void cascade_classifier_node::m_dispCb(const stereo_msgs::DisparityImage::ConstPtr& msg)
@@ -90,7 +137,7 @@ void cascade_classifier_node::m_dispCb(const stereo_msgs::DisparityImage::ConstP
 	    
             try
             {
-                m_disp_ptr = cv_bridge::toCvCopy(msg->image, sensor_msgs::image_encodings::BGR8);
+                m_disp_ptr = cv_bridge::toCvCopy(msg->image, sensor_msgs::image_encodings::TYPE_32FC1);
             }
             catch (cv_bridge::Exception& e)
             {
@@ -98,13 +145,15 @@ void cascade_classifier_node::m_dispCb(const stereo_msgs::DisparityImage::ConstP
                 return;
             }
 
-
+	if(detection_list_.size() >1)
+	m_computeDisparityPoint();
     }
 
 void cascade_classifier_node::m_imageCb(const sensor_msgs::ImageConstPtr& msg, const sensor_msgs::CameraInfoConstPtr& cam_info)
     {
 	m_leftCbTrig = true;
         	left_info = *cam_info;
+		 left_image = *msg;
             cv_bridge::CvImagePtr cv_ptr;
             static cv::Mat frame;
 
@@ -117,12 +166,13 @@ void cascade_classifier_node::m_imageCb(const sensor_msgs::ImageConstPtr& msg, c
                 ROS_ERROR("cv_bridge exception: %s", e.what());
                 return;
             }
+	   
 		if(m_leftCbTrig && m_rightCbTrig && m_stereoModelNotConfigured)
 		{
 			m_stereoModelNotConfigured = false;
 			m_configStereoModel();
 		}	
-
+		
 
             // Update GUI Window
 	    if(!m_stereoModelNotConfigured)
