@@ -73,6 +73,29 @@ void cascade_classifier_node::m_configStereoModel()
 {
 	this->stereo_model.fromCameraInfo(this->left_info, this->right_info);
 }
+
+float cascade_classifier_node::nNdisp(const cv::Point2d& pt, const cv::Mat& disp) {
+int window = 10;
+int startx = pt.x - window/2;
+int starty = pt.y;
+int ctr = 0;
+float sum = 0.0;
+for (int i = 0; i < window; i++) {
+	for (int j = 0; j < window; j++) {
+		float value = disp.at<float>(starty + i, startx + j);
+		if (value > 0.0)
+		{
+			sum = sum + value;
+			ctr ++;
+		}
+	}
+}
+// ROS_INFO_STREAM("CTR pts = " << ctr);
+	if(ctr == 0)
+		return 0.0;
+	return sum / (float) ctr;
+}
+
 void cascade_classifier_node::m_computeDisparityPoint()
     {
    	if(!m_disp_ptr)
@@ -85,12 +108,12 @@ void cascade_classifier_node::m_computeDisparityPoint()
 		Point2d obj_centroid(detection_list_.at(i)->first.first,
 			detection_list_.at(i)->first.second);
 		Point3d obj_3d;
-		float disp_val = disp_frame.at<float>(obj_centroid.y, obj_centroid.x);
-	cout << "Disparity value at " << obj_centroid.x <<","<< obj_centroid.y<< " is " << disp_val <<endl;
+		float disp_val_pre_filter = disp_frame.at<float>(obj_centroid.y, obj_centroid.x);
+	cout << "Disparity value at " << obj_centroid.x <<","<< obj_centroid.y<< " is " << disp_val_pre_filter <<endl;
+		float disp_val = nNdisp(obj_centroid, disp_frame);
 	this->stereo_model.projectDisparityTo3d(obj_centroid, disp_val,
 obj_3d);
 	tf::Point detection(obj_3d.x, obj_3d.y, obj_3d.z);
-	cout << "Detection at "<< obj_3d.x << "," << obj_3d.y << "," << obj_3d.z <<endl;
 
 	tf::pointTFToMsg(detection, camera_point.point);
 	ros::Time tZero(0);
@@ -120,14 +143,35 @@ obj_3d);
 	tf::pointMsgToTF(robot_point.point, robot_rel_detection);
 
 	CascadeManager.addDetection(detection, detection_list_.at(i)->second);
-	//AeroManager.addAndReplaceDetection(robot_rel_detection, WHA);
+	AeroManager.addAndReplaceDetection(robot_rel_detection, WHA);
 	}
 
 	tf::Point detection;
 	tf::Point robot_rel_det;
 	detection_list_.clear();
 	CascadeManager.shrink();
+	AeroManager.shrink();
+	double confidence, rr_conf;
+	object_type type, rr_type;
+	if(CascadeManager.getDetection(detection, type, confidence))
+	{
+			cout << "I Got A Detection: " << endl << "X:" << detection.getX()
+<< ", Y: " << detection.getY() << ", Z: " << detection.getZ()
+<< ", " << confidence
+<< std::endl;
+
+	}
     }
+
+
+void cascade_classifier_node::buildMsg(const tf::Point& point,
+geometry_msgs::PoseStamped& msg) const {
+tf::pointTFToMsg(point, msg.pose.position);
+tf::Quaternion q;
+q.setRPY(0, 0, 0);
+q.normalize();
+tf::quaternionTFToMsg(q, msg.pose.orientation);
+}
 
 void cascade_classifier_node::m_dispCb(const stereo_msgs::DisparityImage::ConstPtr& msg)
     {
