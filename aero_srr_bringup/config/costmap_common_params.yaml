@@ -9,3 +9,4 @@ laser_scan_sensor: {sensor_frame: aero/laser_link, data_type: LaserScan, topic: 
 
 global_frame: aero/odom
 robot_base_frame: aero/base_link
+transform_tolerance: 0.6
