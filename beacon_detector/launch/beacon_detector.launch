@@ -23,5 +23,6 @@
       {id:   8, size: 0.5588},
       {id: 105, size: 0.5588}]
     </rosparam>
+    <param name="sensor_frame_id" value="aero/lower_stereo/left_camera_optical_frame"/>
   </node>
 </launch>
