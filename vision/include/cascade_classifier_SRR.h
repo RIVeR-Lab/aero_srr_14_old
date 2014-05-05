@@ -21,7 +21,7 @@
 static const std::string OPENCV_WINDOW_RIGHT = "Top_Right_Rectified";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining/cascade.xml";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining20Hog/cascade.xml";
-static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTrainingHaar/cascade.xml";
+static const std::string cascade_path_WHA = "/home/aero/srr/src/aero_srr_14/vision/trainingSnapshots/training4_hook_data/cascade.xml";
 
 class cascade_classifier_node
 {
