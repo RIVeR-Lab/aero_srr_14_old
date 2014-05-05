@@ -11,9 +11,9 @@ cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("
         // Subscribe to input video feed and publish output video feed
      //   m_image_sub_left = it_.subscribe("camera/image", 1, &cascade_classifier_node::m_imageCb, this);
 	m_image_sub_left = it_.subscribeCamera("/aero/lower_stereo/left/image_raw",20, &cascade_classifier_node::m_imageCb, this);
-	m_image_sub_right = it_.subscribeCamera("/aero/lower_stereo/right/image_raw",20, &cascade_classifier_node::m_imageCbRight, this);
-        m_disp_sub.subscribe(nh_,"/aero/lower_stereo/disparity", 3);
-	m_disp_sub.registerCallback(&cascade_classifier_node::m_dispCb,this);
+	//m_image_sub_right = it_.subscribeCamera("/aero/lower_stereo/right/image_raw",20, &cascade_classifier_node::m_imageCbRight, this);
+        //m_disp_sub.subscribe(nh_,"/aero/lower_stereo/disparity", 3);
+	//m_disp_sub.registerCallback(&cascade_classifier_node::m_dispCb,this);
        // m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
         cv::namedWindow(m_LeftCameraView);
     }
@@ -38,8 +38,8 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         cv::cvtColor(frame, frame_gray, CV_RGB2GRAY);
         cv::equalizeHist(frame_gray, frame_gray);
 
-        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.1, 15, 0,
-                    cv::Size(40, 40), cv::Size(90, 90));
+        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.1, 10, 0,
+                    cv::Size(50, 50), cv::Size(70, 70));
 
         for (int i = 0; i < WHA_faces.size(); i++)
         {
@@ -235,7 +235,7 @@ void cascade_classifier_node::m_imageCb(const sensor_msgs::ImageConstPtr& msg, c
 		
 
             // Update GUI Window
-	    if(!m_stereoModelNotConfigured)
+	    //if(!m_stereoModelNotConfigured)
             m_detectAndDisplay(cv_ptr,frame, m_LeftCameraView);
 
     }
