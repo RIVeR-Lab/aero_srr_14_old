@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="sample_detection" type="cascade_classifier_SRR_hook" name="sample_detector" ns="aero" output="screen">
+    <param name="cascade_path_WHA" value="$(find sample_detection)/training4_hook_data/cascade.xml"/>
+    <remap from="image" to="lower_stereo/left/image_raw"/>
+  </node>
+</launch>

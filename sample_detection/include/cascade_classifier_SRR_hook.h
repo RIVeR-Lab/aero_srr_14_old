@@ -38,6 +38,7 @@ public:
 private:
      //ROS related vars.
      ros::NodeHandle nh_;
+     ros::NodeHandle pnh_;
      image_transport::ImageTransport it_;
      image_transport::Subscriber m_m_image_sub_left;
      image_transport::Publisher  m_m_image_pub_left;

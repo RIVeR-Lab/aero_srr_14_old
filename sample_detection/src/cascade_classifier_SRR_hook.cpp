@@ -4,16 +4,23 @@ using namespace std;
 using namespace cv;
 using namespace sensor_msgs;
 
-cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified")
+cascade_classifier_node::cascade_classifier_node(): pnh_("~"), it_(nh_), m_LeftCameraView("Top_Left_Rectified")
     {
         // Subscribe to input video feed and publish output video feed
        // m_m_image_sub_left = it_.subscribe("/stereo/left/image_raw", 1, &cascade_classifier_node::m_imageCb, this);
 
-        m_m_image_sub_left = it_.subscribe("/aero/lower_stereo/left/image_raw", 1, &cascade_classifier_node::m_imageCb, this);
+        m_m_image_sub_left = it_.subscribe("image", 1, &cascade_classifier_node::m_imageCb, this);
 
         //m_m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
 
         cv::namedWindow(m_LeftCameraView);
+
+
+	std::string cascade_path_WHA = "/home/aero/srr/src/aero_srr_14/Sample_detection/training4_hook_data/cascade.xml";
+	pnh_.getParam("cascade_path_WHA", cascade_path_WHA);
+        if (!cascade_WHA.load(cascade_path_WHA)) {
+            printf("--(!)Error loading\n");
+        }
     }
 
  cascade_classifier_node::~cascade_classifier_node()
@@ -28,10 +35,6 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         static cv::Mat frame_gray;
         frame = cv_ptr->image;
         int HORIZON = 660;
-
-        if (!cascade_WHA.load(cascade_path_WHA)) {
-            printf("--(!)Error loading\n");
-        }
 
 
         cv::cvtColor(frame, frame_gray, CV_RGB2GRAY);
