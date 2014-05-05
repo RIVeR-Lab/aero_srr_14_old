@@ -117,22 +117,22 @@ obj_3d);
 
 	tf::pointTFToMsg(detection, camera_point.point);
 	ros::Time tZero(0);
-	camera_point.header.frame_id = "/lower_stereo_optical_frame";
+	camera_point.header.frame_id = "lower_stereo_optical_frame";
 	camera_point.header.stamp = left_image.header.stamp;
 
-	robot_point.header.frame_id = "/base_footprint";
+	robot_point.header.frame_id = "aero/base_footprint";
 	robot_point.header.stamp = left_image.header.stamp;
 
-	world_point.header.frame_id = "/world";
+	world_point.header.frame_id = "aero/odom";
 	world_point.header.stamp = left_image.header.stamp;
 
 	try
 	{
-		optimus_prime.waitForTransform("/world",
+		optimus_prime.waitForTransform("aero/odom",
 		camera_point.header.frame_id, camera_point.header.stamp,
 		ros::Duration(10.0));
-		optimus_prime.transformPoint("/world", camera_point, world_point);
-		optimus_prime.transformPoint("/base_footprint",camera_point,robot_point);
+		optimus_prime.transformPoint("aero/odom", camera_point, world_point);
+		optimus_prime.transformPoint("aero/base_footprint",camera_point,robot_point);
 	}
 	catch(std::exception& e)
 	{
@@ -159,8 +159,24 @@ obj_3d);
 << ", Y: " << detection.getY() << ", Z: " << detection.getZ()
 << ", " << confidence
 << std::endl;
-
+ObjectLocationMsg msg;
+	msg.header.frame_id = "aero/odom";
+msg.header.stamp = left_image.header.stamp;
+msg.pose.header.frame_id = "aero/odom";
+msg.pose.header.stamp = left_image.header.stamp;
+buildMsg(detection, msg.pose);
+ObjLocationPubWorld.publish(msg);
 	}
+	if(AeroManager.getDetection(robot_rel_det, rr_type, rr_conf)) {
+ObjectLocationMsg msg;
+msg.header.frame_id = "aero/base_footprint";
+msg.header.stamp = ros::Time::now();
+msg.pose.header.frame_id = "aero/base_footprint";
+msg.pose.header.stamp = ros::Time::now();
+buildMsg(robot_rel_det, msg.pose);
+ObjLocationPub.publish(msg);
+ROS_WARN_STREAM("Sent obj pose msg");
+}
     }
 
 

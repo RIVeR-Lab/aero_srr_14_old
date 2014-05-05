@@ -4,7 +4,7 @@ project(vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf)
+find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -41,11 +41,11 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+ add_message_files(
+	FILES
+  ObjectLocationMsg.msg
 #   Message2.msg
-# )
+ )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -62,10 +62,11 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs  # Or other packages containing msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -79,7 +80,7 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES vision
-  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf
+  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs
 #  DEPENDS OpenCV image_transport nodelet roscpp
 )
 

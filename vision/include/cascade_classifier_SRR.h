@@ -15,7 +15,7 @@
 #include <classifierTypes.h>
 #include <geometry_msgs/PointStamped.h>
 #include <tf/transform_listener.h>
-//#include <ObjectLocationMsg.msg>
+#include <vision/ObjectLocationMsg.h>
 
 
 static const std::string OPENCV_WINDOW_RIGHT = "Top_Right_Rectified";
@@ -42,6 +42,7 @@ private:
      	cv_bridge::CvImagePtr m_disp_ptr;
 	tf::TransformListener optimus_prime;
 	sensor_msgs::Image left_image;
+	ros::Publisher ObjLocationPub, ObjLocationPubWorld;
 
 message_filters::Subscriber<stereo_msgs::DisparityImage> m_disp_sub; 
 
