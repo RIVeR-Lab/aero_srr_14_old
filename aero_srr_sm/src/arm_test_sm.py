@@ -34,41 +34,15 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        trajectory_a = [create_arm_pose('arm_base', -0.2, -0.2, 1, 0, 0, 0),
-                        create_arm_fingers(create_arm_pose('arm_base', -0.2, -0.2, 1, 0, 0, 0), 1, 1, 1),
-                        create_arm_pose('arm_base', -0.25, -0.25, 1.05, 0, 0, 0),
-                        create_arm_pose('arm_base', -0.2, -0.2, 1.1, 0, 0, 0)]
+        trajectory_a = [create_arm_pose('jaco_api_origin', -0.35, -0.2, 0.4, -math.pi/2, -math.pi/2, 0),
+                        create_arm_pose('jaco_api_origin', -0.35, 0.1, 0.4, -math.pi/2, 0, 0),
+                        create_arm_fingers(create_arm_pose('jaco_api_origin', -0.35, 0.1, 0.04, -math.pi/2, 0, 0), 1, 1, 1),
+                        create_arm_pose('jaco_api_origin', -0.35, 0.2, 0.04, -math.pi/2, 0, 0),
+                        create_arm_fingers(create_arm_pose('jaco_api_origin', -0.35, 0.2, 0.04, -math.pi/2, 0, 0), 60, 60, 60),
+                        create_arm_pose('jaco_api_origin', -0.35, 0.2, 0.4, -math.pi/2, 0, 0)]
         smach.StateMachine.add('TRAJECTORY_A',
                                create_arm_trajectory_state(trajectory_a),
-                               transitions={'succeeded':'TRAJECTORY_B',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-
-        trajectory_b = [create_arm_pose('arm_base', -0.2, 0.2, 1, 0, 0, 0),
-                        create_arm_fingers(create_arm_pose('arm_base', -0.2, 0.2, 1, 0, 0, 0), 40, 40, 40),
-                        create_arm_pose('arm_base', -0.25, 0.25, 1.05, 0, 0, 0),
-                        create_arm_pose('arm_base', -0.2, 0.2, 1.1, 0, 0, 0)]
-        smach.StateMachine.add('TRAJECTORY_B',
-                               create_arm_trajectory_state(trajectory_b),
-                               transitions={'succeeded':'TRAJECTORY_C',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-
-        trajectory_c = [create_arm_pose('arm_base', 0.2, 0.2, 1, 0, 0, 0),
-                        create_arm_pose('arm_base', 0.25, 0.25, 1.05, 0, 0, 0),
-                        create_arm_pose('arm_base', 0.2, 0.2, 1.1, 0, 0, 0)]
-        smach.StateMachine.add('TRAJECTORY_C',
-                               create_arm_trajectory_state(trajectory_c),
-                               transitions={'succeeded':'TRAJECTORY_D',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-
-        trajectory_d = [create_arm_pose('arm_base', 0.2, -0.2, 1, 0, 0, 0),
-                        create_arm_pose('arm_base', 0.25, -0.25, 1.05, 0, 0, 0),
-                        create_arm_pose('arm_base', 0.2, -0.2, 1.1, 0, 0, 0)]
-        smach.StateMachine.add('TRAJECTORY_D',
-                               create_arm_trajectory_state(trajectory_d),
-                               transitions={'succeeded':'INIT',
+                               transitions={'succeeded':'succeeded',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
@@ -79,7 +53,7 @@ def main():
     # Execute SMACH plan
     outcome = sm.execute()
 
-    rospy.spin()
+    #rospy.spin()
     sis.stop()
 
 
