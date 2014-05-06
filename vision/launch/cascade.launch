@@ -1,0 +1,12 @@
+<launch>
+
+<node pkg="vision" type="cascade" name="detector_node" ns="aero" output="screen">
+
+<param name="cascade_path_WHA" value="$(find vision)/cascadeTraining4bHookdata/cascade.xml"/>
+
+<remap from="left_image" to="lower_stereo/left/image_raw"/>
+<remap from="right_image" to="lower_stereo/right/image_raw"/>
+<remap from="CV_Windows_enabled" to="true"/>
+ </node>
+
+</launch>

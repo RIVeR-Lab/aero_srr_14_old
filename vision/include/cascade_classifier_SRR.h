@@ -21,7 +21,7 @@
 static const std::string OPENCV_WINDOW_RIGHT = "Top_Right_Rectified";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining/cascade.xml";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining20Hog/cascade.xml";
-static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTrainingHaar/cascade.xml";
+
 
 class cascade_classifier_node
 {
@@ -32,6 +32,7 @@ public:
 private:
      //ROS related vars.
      ros::NodeHandle nh_;
+	ros::NodeHandle pnh_;
      image_transport::ImageTransport it_;
      image_transport::CameraSubscriber m_image_sub_left;
      image_transport::CameraSubscriber m_image_sub_right;
@@ -43,6 +44,7 @@ private:
 	tf::TransformListener optimus_prime;
 	sensor_msgs::Image left_image;
 	ros::Publisher ObjLocationPub, ObjLocationPubWorld;
+	ros::Timer disp_timer;
 
 message_filters::Subscriber<stereo_msgs::DisparityImage> m_disp_sub; 
 
@@ -57,6 +59,7 @@ message_filters::Subscriber<stereo_msgs::DisparityImage> m_disp_sub;
 	bool m_leftCbTrig;
 	bool m_rightCbTrig;
 	bool m_stereoModelNotConfigured;
+	bool CV_Windows_enabled;
 
 
 	// Manager
@@ -116,6 +119,12 @@ message_filters::Subscriber<stereo_msgs::DisparityImage> m_disp_sub;
 	* @brief Averages the disparities in the area to get a proper value.
 	*/
 	float nNdisp(const cv::Point2d& pt, const cv::Mat& disp);
+
+	/**
+	* @author Samir Zutshi
+	* @brief Callback for the disparity calculation
+	*/
+	void m_computeDisparityCb(const ros::TimerEvent& event);
 
 
 	
