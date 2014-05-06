@@ -15,6 +15,12 @@ cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("
         m_disp_sub.subscribe(nh_,"/aero/lower_stereo/disparity", 3);
 	m_disp_sub.registerCallback(&cascade_classifier_node::m_dispCb,this);
        // m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
+	ObjLocationPub = nh_.advertise<vision::ObjectLocationMsg>(
+"ObjectPose", 2);
+ObjLocationPubWorld = nh_.advertise<vision::ObjectLocationMsg>(
+"ObjectPoseWorld", 2);
+		disp_timer = nh_.createTimer(ros::Duration(1 / 20),
+&cascade_classifier_node::m_computeDisparityCb, this);
         cv::namedWindow(m_LeftCameraView);
     }
 
@@ -23,6 +29,14 @@ cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("
      cv::destroyWindow(m_LeftCameraView); 
 }
 
+void cascade_classifier_node::m_computeDisparityCb(const ros::TimerEvent& event)
+{
+	if(m_leftCbTrig && m_rightCbTrig)
+{
+m_configStereoModel();
+		m_computeDisparityPoint();	
+}
+}
 void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv_ptr, cv::Mat& frame, const char* WINDOW)
     {
         std::vector<cv::Rect> WHA_faces;
@@ -38,8 +52,8 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         cv::cvtColor(frame, frame_gray, CV_RGB2GRAY);
         cv::equalizeHist(frame_gray, frame_gray);
 
-        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.1, 15, 0,
-                    cv::Size(40, 40), cv::Size(90, 90));
+        cascade_WHA.detectMultiScale(frame_gray, WHA_faces, 1.01, 5, 0,
+                    cv::Size(50, 50), cv::Size(150, 150));
 
         for (int i = 0; i < WHA_faces.size(); i++)
         {
@@ -72,6 +86,7 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
 void cascade_classifier_node::m_configStereoModel()
 {
 	this->stereo_model.fromCameraInfo(this->left_info, this->right_info);
+	m_stereoModelNotConfigured = false;
 }
 
 float cascade_classifier_node::nNdisp(const cv::Point2d& pt, const cv::Mat& disp) {
@@ -98,6 +113,7 @@ for (int i = 0; i < window; i++) {
 
 void cascade_classifier_node::m_computeDisparityPoint()
     {
+	
    	if(!m_disp_ptr)
 		return;
    	cv::Mat disp_frame;
@@ -109,15 +125,16 @@ void cascade_classifier_node::m_computeDisparityPoint()
 			detection_list_.at(i)->first.second);
 		Point3d obj_3d;
 		float disp_val_pre_filter = disp_frame.at<float>(obj_centroid.y, obj_centroid.x);
-	cout << "Disparity value at " << obj_centroid.x <<","<< obj_centroid.y<< " is " << disp_val_pre_filter <<endl;
+	
 		float disp_val = nNdisp(obj_centroid, disp_frame);
+cout << "Disparity value at " << obj_centroid.x <<","<< obj_centroid.y<< " is " << disp_val <<endl;
 	this->stereo_model.projectDisparityTo3d(obj_centroid, disp_val,
 obj_3d);
 	tf::Point detection(obj_3d.x, obj_3d.y, obj_3d.z);
-
+cout << "3D val is " << obj_3d.x <<","<< obj_3d.y<< " is " << obj_3d.z <<endl;
 	tf::pointTFToMsg(detection, camera_point.point);
 	ros::Time tZero(0);
-	camera_point.header.frame_id = "lower_stereo_optical_frame";
+	camera_point.header.frame_id = "aero/lower_stereo/optical_frame";
 	camera_point.header.stamp = left_image.header.stamp;
 
 	robot_point.header.frame_id = "aero/base_footprint";
@@ -130,7 +147,7 @@ obj_3d);
 	{
 		optimus_prime.waitForTransform("aero/odom",
 		camera_point.header.frame_id, camera_point.header.stamp,
-		ros::Duration(10.0));
+		ros::Duration(.50));
 		optimus_prime.transformPoint("aero/odom", camera_point, world_point);
 		optimus_prime.transformPoint("aero/base_footprint",camera_point,robot_point);
 	}
@@ -226,17 +243,10 @@ void cascade_classifier_node::m_imageCb(const sensor_msgs::ImageConstPtr& msg, c
                 ROS_ERROR("cv_bridge exception: %s", e.what());
                 return;
             }
-	   
-		if(m_leftCbTrig && m_rightCbTrig && m_stereoModelNotConfigured)
-		{
-			m_stereoModelNotConfigured = false;
-			m_configStereoModel();
-		}	
+	   	
 		
-
-            // Update GUI Window
-	    if(!m_stereoModelNotConfigured)
-            m_detectAndDisplay(cv_ptr,frame, m_LeftCameraView);
+	if(!m_stereoModelNotConfigured)
+               m_detectAndDisplay(cv_ptr,frame, m_LeftCameraView);
 
     }
 
