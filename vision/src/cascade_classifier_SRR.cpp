@@ -82,10 +82,11 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         }
 	
         cv::line(frame,cv::Point2d(0,HORIZON),cv::Point2d(frame_gray.cols,HORIZON),cv::Scalar(0,255,0));
-        cv::imshow(m_LeftCameraView, frame);
        
-	 cv::waitKey(3);
-
+if(CV_Windows_enabled){ 
+cv::imshow(m_LeftCameraView, frame);
+       	 cv::waitKey(3);
+}
     }
 void cascade_classifier_node::m_configStereoModel()
 {
