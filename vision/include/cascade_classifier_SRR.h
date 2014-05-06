@@ -21,7 +21,7 @@
 static const std::string OPENCV_WINDOW_RIGHT = "Top_Right_Rectified";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining/cascade.xml";
 //static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining20Hog/cascade.xml";
-static const std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining4bHookdata/cascade.xml";
+
 
 class cascade_classifier_node
 {
@@ -32,6 +32,7 @@ public:
 private:
      //ROS related vars.
      ros::NodeHandle nh_;
+	ros::NodeHandle pnh_;
      image_transport::ImageTransport it_;
      image_transport::CameraSubscriber m_image_sub_left;
      image_transport::CameraSubscriber m_image_sub_right;
@@ -58,6 +59,7 @@ message_filters::Subscriber<stereo_msgs::DisparityImage> m_disp_sub;
 	bool m_leftCbTrig;
 	bool m_rightCbTrig;
 	bool m_stereoModelNotConfigured;
+	bool CV_Windows_enabled;
 
 
 	// Manager

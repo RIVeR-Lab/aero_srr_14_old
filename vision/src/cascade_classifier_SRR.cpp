@@ -6,12 +6,12 @@ using namespace cv;
 using namespace sensor_msgs;
 using namespace vision;
 
-cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified"), m_leftCbTrig(false), m_rightCbTrig(false), m_stereoModelNotConfigured(true), CascadeManager(.25,.15,.05,.5,2.0), AeroManager(1.5, .20, .10,.25,.25)
+cascade_classifier_node::cascade_classifier_node(): it_(nh_), m_LeftCameraView("Top_Left_Rectified"), m_leftCbTrig(false), m_rightCbTrig(false), m_stereoModelNotConfigured(true), CascadeManager(.25,.15,.05,.5,2.0), AeroManager(1.5, .20, .10,.25,.25),  pnh_("~"), CV_Windows_enabled(true)
     {
         // Subscribe to input video feed and publish output video feed
      //   m_image_sub_left = it_.subscribe("camera/image", 1, &cascade_classifier_node::m_imageCb, this);
-	m_image_sub_left = it_.subscribeCamera("/aero/lower_stereo/left/image_raw",20, &cascade_classifier_node::m_imageCb, this);
-	m_image_sub_right = it_.subscribeCamera("/aero/lower_stereo/right/image_raw",20, &cascade_classifier_node::m_imageCbRight, this);
+	m_image_sub_left = it_.subscribeCamera("left_image",20, &cascade_classifier_node::m_imageCb, this);
+	m_image_sub_right = it_.subscribeCamera("right_image",20, &cascade_classifier_node::m_imageCbRight, this);
         m_disp_sub.subscribe(nh_,"/aero/lower_stereo/disparity", 3);
 	m_disp_sub.registerCallback(&cascade_classifier_node::m_dispCb,this);
        // m_image_pub_left = it_.advertise("/stereo/left/image_rect_small", 1);
@@ -22,6 +22,12 @@ ObjLocationPubWorld = nh_.advertise<vision::ObjectLocationMsg>(
 		disp_timer = nh_.createTimer(ros::Duration(1 / 20),
 &cascade_classifier_node::m_computeDisparityCb, this);
         cv::namedWindow(m_LeftCameraView);
+ std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining4bHookdata/cascade.xml";
+pnh_.getParam("cascade_path_WHA", cascade_path_WHA);
+pnh_.getParam("CV_Windows_enabled", CV_Windows_enabled);
+        if (!cascade_WHA.load(cascade_path_WHA)) {
+            printf("--(!)Error loading\n");
+        }
     }
 
  cascade_classifier_node::~cascade_classifier_node()
@@ -44,10 +50,7 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         static cv::Mat frame_gray;
         frame = cv_ptr->image;
         int HORIZON = 660;
-
-        if (!cascade_WHA.load(cascade_path_WHA)) {
-            printf("--(!)Error loading\n");
-        }
+	
 
         cv::cvtColor(frame, frame_gray, CV_RGB2GRAY);
         cv::equalizeHist(frame_gray, frame_gray);
@@ -80,7 +83,8 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
 	
         cv::line(frame,cv::Point2d(0,HORIZON),cv::Point2d(frame_gray.cols,HORIZON),cv::Scalar(0,255,0));
         cv::imshow(m_LeftCameraView, frame);
-        cv::waitKey(3);
+       
+	 cv::waitKey(3);
 
     }
 void cascade_classifier_node::m_configStereoModel()
