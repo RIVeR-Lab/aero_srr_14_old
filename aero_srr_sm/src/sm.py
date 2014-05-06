@@ -10,13 +10,46 @@ from actionlib.msg import *
 from std_msgs.msg import *
 from geometry_msgs.msg import *
 from move_base_msgs.msg import *
+from vision.msg import *
 import math
 import tf2_ros
 import tf
 
 from fake_state import *
+from detection_pickup_state import *
 from move_state_util import *
 from arm_state_util import *
+
+
+def child_term_cb(outcome_map):
+    if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
+        return True
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'succeeded':
+        return True
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'preempted':
+        return True
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'aborted':
+        return True
+    else:
+        return False
+
+def out_cb(outcome_map):
+    if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
+        return 'succeeded'
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'succeeded':
+        return 'failed'
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'preempted':
+        return 'failed'
+    elif outcome_map['WAIT_DETECT_FAKE'] == 'aborted':
+        return 'failed'
+    else:
+        return 'failed'
+    
+def monitor_cb(ud, msg):
+    ud['detection_msg'] = msg
+    return False
+
+
 
 
 # main
@@ -37,58 +70,44 @@ def main():
                                             'preempted':'failed'})
 
         smach.StateMachine.add('LEAVE_PLATFORM',
-                               create_move_state(3, 20, math.pi/2),
+                               create_move_state(5, 0, 0),
                                transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
-                               create_move_state(-20, 10, math.pi),
+                               create_move_state(10, 0, 0),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
-        smach.StateMachine.add('SEARCH_FOR_PRECACHE', FakeState(),
-                               transitions={'succeeded':'NAV_TO_PRECACHE',
-                                            'aborted':'SEARCH_FOR_PRECACHE',
-                                            'preempted':'failed'})
-        smach.StateMachine.add('NAV_TO_PRECACHE', FakeState(),
+
+        
+        drive_detect_concurrence = smach.Concurrence(outcomes=['succeeded', 'failed'],
+                                                    default_outcome='failed',
+                                                    output_keys=['detection_msg'],
+                                                    child_termination_cb=child_term_cb,
+                                                    outcome_cb=out_cb)
+        with drive_detect_concurrence:
+                smach.Concurrence.add('WAIT_FOR_DETECTION',
+                                      smach_ros.MonitorState("/aero/lower_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(20, 0, 0))
+        smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
                                transitions={'succeeded':'PICKUP_PRECACHE',
-                                            'aborted':'SEARCH_FOR_PRECACHE',
-                                            'preempted':'failed'})
-
-        pickup_sm = smach.StateMachine(outcomes=['succeeded', 'aborted', 'preempted'])
-        with pickup_sm:
-            smach.StateMachine.add('NAV_TO_PICKUP_POSITION', FakeState(),
-                                   transitions={'succeeded':'POSITION_ARM_FOR_GRAB',
-                                                'aborted':'aborted',
-                                                'preempted':'preempted'})
-            smach.StateMachine.add('POSITION_ARM_FOR_GRAB', FakeState(),
-                                   transitions={'succeeded':'GRAB',
-                                                'aborted':'aborted',
-                                                'preempted':'preempted'})
-            smach.StateMachine.add('GRAB', FakeState(),
-                                   transitions={'succeeded':'PICKUP_SAMPLE',
-                                                'aborted':'POSITION_ARM_FOR_GRAB',
-                                                'preempted':'preempted'})
-            smach.StateMachine.add('PICKUP_SAMPLE', FakeState(),
-                                   transitions={'succeeded':'STORE_SAMPLE',
-                                                'aborted':'PICKUP_SAMPLE',
-                                                'preempted':'preempted'})
-            smach.StateMachine.add('STORE_SAMPLE', FakeState(),
-                                   transitions={'succeeded':'succeeded',
-                                                'aborted':'STORE_SAMPLE',
-                                                'preempted':'preempted'})
-        smach.StateMachine.add('PICKUP_PRECACHE', pickup_sm,
+                                            'failed':'failed'})
+        
+        smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
                                transitions={'succeeded':'NAV_TO_PLATFORM',
-                                            'aborted':'SEARCH_FOR_PRECACHE',
+                                            'aborted':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('NAV_TO_PLATFORM', FakeState(),
+        smach.StateMachine.add('NAV_TO_PLATFORM',
+                               create_move_state(5, 0, 0),
                                transitions={'succeeded':'NAV_ONTO_PLATFORM',
-                                            'aborted':'NAV_TO_PLATFORM',
+                                            'aborted':'failed',
                                             'preempted':'failed'})
-        smach.StateMachine.add('NAV_ONTO_PLATFORM', FakeState(),
-                               transitions={'succeeded':'succeeded',
-                                            'aborted':'NAV_TO_PLATFORM',
+        smach.StateMachine.add('NAV_ONTO_PLATFORM',
+                               create_move_state(0, 0, 0),
+                               transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
+                                            'aborted':'failed',
                                             'preempted':'failed'})
 
     sis = smach_ros.IntrospectionServer('aero_srr_sm', sm, '/SM_ROOT')

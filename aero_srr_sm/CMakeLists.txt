@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   smach_ros
   tf2
   jaco_msgs
+  vision
 )
 
 ## System dependencies are found with CMake's conventions
