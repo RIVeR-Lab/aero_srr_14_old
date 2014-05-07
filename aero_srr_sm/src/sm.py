@@ -24,11 +24,11 @@ from arm_state_util import *
 def child_term_cb(outcome_map):
     if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
         return True
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'succeeded':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'succeeded':
         return True
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'preempted':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'preempted':
         return True
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'aborted':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'aborted':
         return True
     else:
         return False
@@ -36,11 +36,11 @@ def child_term_cb(outcome_map):
 def out_cb(outcome_map):
     if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
         return 'succeeded'
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'succeeded':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'succeeded':
         return 'failed'
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'preempted':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'preempted':
         return 'failed'
-    elif outcome_map['WAIT_DETECT_FAKE'] == 'aborted':
+    elif outcome_map['WAIT_FOR_DETECTION'] == 'aborted':
         return 'failed'
     else:
         return 'failed'
@@ -65,17 +65,22 @@ def main():
         smach.StateMachine.add('WAIT_FOR_IMU',
                                smach_ros.MonitorState("/aero/imu/is_calibrated", Bool, lambda ud, msg: not msg.data),
         #becomes invalid when callback is false
-                               transitions={'invalid':'LEAVE_PLATFORM',
+                               transitions={'invalid':'WAIT_FOR_START',
                                             'valid':'failed',
                                             'preempted':'failed'})
 
+        smach.StateMachine.add('WAIT_FOR_START', FakeState(),
+                               transitions={'succeeded':'LEAVE_PLATFORM',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
+
         smach.StateMachine.add('LEAVE_PLATFORM',
-                               create_move_state(5, 0, 0),
+                               create_move_state(1, 0, 0),
                                transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
-                               create_move_state(10, 0, 0),
+                               create_move_state(2, 0, 0),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
@@ -88,19 +93,23 @@ def main():
                                                     outcome_cb=out_cb)
         with drive_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
-                smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(20, 0, 0))
+                                      smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
                                transitions={'succeeded':'PICKUP_PRECACHE',
                                             'failed':'failed'})
         
-        smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
+        smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
                                transitions={'succeeded':'NAV_TO_PLATFORM',
                                             'aborted':'failed',
                                             'preempted':'failed'})
+        #smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
+        #                       transitions={'succeeded':'NAV_TO_PLATFORM',
+        #                                    'aborted':'failed',
+        #                                    'preempted':'failed'})
 
         smach.StateMachine.add('NAV_TO_PLATFORM',
-                               create_move_state(5, 0, 0),
+                               create_move_state(1, 0, 0),
                                transitions={'succeeded':'NAV_ONTO_PLATFORM',
                                             'aborted':'failed',
                                             'preempted':'failed'})
