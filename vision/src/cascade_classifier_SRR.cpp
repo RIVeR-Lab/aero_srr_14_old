@@ -168,19 +168,37 @@ cout << "3D val is " << obj_3d.x <<","<< obj_3d.y<< " is " << obj_3d.z <<endl;
 	tf::pointMsgToTF(world_point.point, detection);
 	tf::pointMsgToTF(robot_point.point, robot_rel_detection);
 
+ObjectLocationMsg msg;
+msg.header.frame_id = "aero/odom";
+msg.header.stamp = left_image.header.stamp;
+msg.pose.header.frame_id = "aero/odom";
+msg.pose.header.stamp = left_image.header.stamp;
+buildMsg(detection, msg.pose);
+ObjLocationPubWorld.publish(msg);
+//	}
+//	if(AeroManager.getDetection(robot_rel_det, rr_type, rr_conf)) {
+msg.header.frame_id = "aero/base_footprint";
+msg.header.stamp = ros::Time::now();
+msg.pose.header.frame_id = "aero/base_footprint";
+msg.pose.header.stamp = ros::Time::now();
+buildMsg(robot_rel_detection, msg.pose);
+ObjLocationPub.publish(msg);
+ROS_WARN_STREAM("Sent obj pose msg");
+
+
 	CascadeManager.addDetection(detection, detection_list_.at(i)->second);
 	AeroManager.addAndReplaceDetection(robot_rel_detection, WHA);
 	}
 
-	tf::Point detection;
-	tf::Point robot_rel_det;
+	//tf::Point detection;
+	//tf::Point robot_rel_det;
 	detection_list_.clear();
 	CascadeManager.shrink();
 	AeroManager.shrink();
 	double confidence, rr_conf;
 	object_type type, rr_type;
-	if(CascadeManager.getDetection(detection, type, confidence))
-	{
+	/*	if(CascadeManager.getDetection(detection, type, confidence))
+	//	{
 			cout << "I Got A Detection: " << endl << "X:" << detection.getX()
 << ", Y: " << detection.getY() << ", Z: " << detection.getZ()
 << ", " << confidence
@@ -192,8 +210,8 @@ msg.pose.header.frame_id = "aero/odom";
 msg.pose.header.stamp = left_image.header.stamp;
 buildMsg(detection, msg.pose);
 ObjLocationPubWorld.publish(msg);
-	}
-	if(AeroManager.getDetection(robot_rel_det, rr_type, rr_conf)) {
+//	}
+//	if(AeroManager.getDetection(robot_rel_det, rr_type, rr_conf)) {
 ObjectLocationMsg msg;
 msg.header.frame_id = "aero/base_footprint";
 msg.header.stamp = ros::Time::now();
@@ -202,7 +220,7 @@ msg.pose.header.stamp = ros::Time::now();
 buildMsg(robot_rel_det, msg.pose);
 ObjLocationPub.publish(msg);
 ROS_WARN_STREAM("Sent obj pose msg");
-}
+//}*/
     }
 
 
