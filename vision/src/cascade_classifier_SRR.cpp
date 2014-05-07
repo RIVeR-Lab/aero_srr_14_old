@@ -21,18 +21,22 @@ ObjLocationPubWorld = nh_.advertise<vision::ObjectLocationMsg>(
 "ObjectPoseWorld", 2);
 		disp_timer = nh_.createTimer(ros::Duration(1 / 20),
 &cascade_classifier_node::m_computeDisparityCb, this);
-        cv::namedWindow(m_LeftCameraView);
  std::string cascade_path_WHA = "/home/aero/SRR_Training/HOOK/cascadeTraining4bHookdata/cascade.xml";
 pnh_.getParam("cascade_path_WHA", cascade_path_WHA);
 pnh_.getParam("CV_Windows_enabled", CV_Windows_enabled);
         if (!cascade_WHA.load(cascade_path_WHA)) {
             printf("--(!)Error loading\n");
         }
+	if(CV_Windows_enabled){ 
+	  cv::namedWindow(m_LeftCameraView);
+	}
     }
 
  cascade_classifier_node::~cascade_classifier_node()
 {
-     cv::destroyWindow(m_LeftCameraView); 
+     if(CV_Windows_enabled){ 
+       cv::destroyWindow(m_LeftCameraView); 
+     }
 }
 
 void cascade_classifier_node::m_computeDisparityCb(const ros::TimerEvent& event)
