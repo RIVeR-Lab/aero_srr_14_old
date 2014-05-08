@@ -100,12 +100,12 @@ void cascade_classifier_node::m_configStereoModel()
 
 float cascade_classifier_node::nNdisp(const cv::Point2d& pt, const cv::Mat& disp) {
 int window = 10;
-int startx = pt.x - 15;
-int starty = pt.y-10;
+int startx = pt.x - 25;
+int starty = pt.y-20;
 int ctr = 0;
 float sum = 0.0;
-for (int i = 0; i < 30; i++) {
-	for (int j = 0; j < 50; j++) {
+for (int i = 0; i < 50; i++) {
+	for (int j = 0; j < 70; j++) {
 		float value = disp.at<float>(starty + i, startx + j);
 		if (value > 0.0)
 		{
@@ -176,7 +176,9 @@ cout << "3D val is " << obj_3d.x <<","<< obj_3d.y<< " is " << obj_3d.z <<endl;
                           cv::Point(center.x + 15,
                                 center.y + 40),
                           cv::Scalar(0, 0, 0));
+	if(CV_Windows_enabled){ 
   cv::imshow(m_LeftCameraView, disp_frame);
+	}
 ObjectLocationMsg msg;
 msg.header.frame_id = "aero/odom";
 msg.header.stamp = left_image.header.stamp;

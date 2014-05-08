@@ -3,7 +3,7 @@
 <node pkg="vision" type="cascade" name="detector_node" ns="aero" output="screen">
 
 <param name="cascade_path_WHA" value="$(find vision)/cascadeTraining4bHookdata/cascade.xml"/>
-<param name="CV_Windows_enabled" value="true"/>
+<param name="CV_Windows_enabled" value="false"/>
 
 <remap from="left_image" to="lower_stereo/left/image_raw"/>
 <remap from="right_image" to="lower_stereo/right/image_raw"/>

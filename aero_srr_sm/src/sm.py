@@ -48,7 +48,7 @@ def out_cb(outcome_map):
     
 def monitor_cb(ud, msg):
     ud['detection_msg'] = msg
-    return math.isnan(msg.pose.pose.position.x)
+    return math.isnan(msg.pose.pose.position.y)
 
 
 
@@ -97,8 +97,18 @@ def main():
                                       smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
-                               transitions={'succeeded':'NAV_TO_PRECACHE',
+                               transitions={'succeeded':'A',
                                             'failed':'failed'})
+
+        smach.StateMachine.add('A', FakeState(),
+                               transitions={'succeeded':'B',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
+        smach.StateMachine.add('B',
+                              smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                               transitions={'invalid':'NAV_TO_PRECACHE',
+                                            'valid':'failed',
+                                            'preempted':'failed'})
 
         smach.StateMachine.add('NAV_TO_PRECACHE', DetectionDriveState(),
                                transitions={'succeeded':'WAIT_FOR_DETECTION_AFTER_NAV',

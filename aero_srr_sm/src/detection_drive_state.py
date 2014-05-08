@@ -31,7 +31,7 @@ class DetectionDriveState(smach.State):
             object_location_base = self.tf_listener.transformPose('aero/base_footprint', object_location)
             object_position = object_location_base.pose.position
 
-            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x-3, object_position.y-0.2, 0);
+            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x-1, object_position.y-0.2, 0);
             self.client.send_goal(goal)
 
             self.client.wait_for_result()
