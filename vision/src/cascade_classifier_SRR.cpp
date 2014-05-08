@@ -1,6 +1,7 @@
 #include <cascade_classifier_SRR.h>
 
 
+
 using namespace std;
 using namespace cv;
 using namespace sensor_msgs;
@@ -88,8 +89,7 @@ void cascade_classifier_node::m_detectAndDisplay(const cv_bridge::CvImagePtr& cv
         cv::line(frame,cv::Point2d(0,HORIZON),cv::Point2d(frame_gray.cols,HORIZON),cv::Scalar(0,255,0));
        
 if(CV_Windows_enabled){ 
-cv::imshow(m_LeftCameraView, frame);
-       	 cv::waitKey(3);
+  //cv::imshow(m_LeftCameraView, frame);
 }
     }
 void cascade_classifier_node::m_configStereoModel()
@@ -100,12 +100,12 @@ void cascade_classifier_node::m_configStereoModel()
 
 float cascade_classifier_node::nNdisp(const cv::Point2d& pt, const cv::Mat& disp) {
 int window = 10;
-int startx = pt.x - window/2;
-int starty = pt.y;
+int startx = pt.x - 15;
+int starty = pt.y-10;
 int ctr = 0;
 float sum = 0.0;
-for (int i = 0; i < window; i++) {
-	for (int j = 0; j < window; j++) {
+for (int i = 0; i < 30; i++) {
+	for (int j = 0; j < 50; j++) {
 		float value = disp.at<float>(starty + i, startx + j);
 		if (value > 0.0)
 		{
@@ -167,7 +167,16 @@ cout << "3D val is " << obj_3d.x <<","<< obj_3d.y<< " is " << obj_3d.z <<endl;
 	tf::Point robot_rel_detection;
 	tf::pointMsgToTF(world_point.point, detection);
 	tf::pointMsgToTF(robot_point.point, robot_rel_detection);
-
+	if(detection_list_.size()>0){
+		Point2d center(detection_list_.at(i)->first.first,
+			detection_list_.at(i)->first.second);
+            cv::rectangle(disp_frame,
+                          cv::Point(center.x - 15,
+                                center.y-10),
+                          cv::Point(center.x + 15,
+                                center.y + 40),
+                          cv::Scalar(0, 0, 0));
+  cv::imshow(m_LeftCameraView, disp_frame);
 ObjectLocationMsg msg;
 msg.header.frame_id = "aero/odom";
 msg.header.stamp = left_image.header.stamp;
@@ -183,7 +192,11 @@ msg.pose.header.frame_id = "aero/base_footprint";
 msg.pose.header.stamp = ros::Time::now();
 buildMsg(robot_rel_detection, msg.pose);
 ObjLocationPub.publish(msg);
+ printf("%f, %f, %f\n", msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z);
 ROS_WARN_STREAM("Sent obj pose msg");
+	}
+
+
 
 
 	CascadeManager.addDetection(detection, detection_list_.at(i)->second);

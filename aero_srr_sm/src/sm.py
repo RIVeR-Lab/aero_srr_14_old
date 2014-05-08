@@ -17,6 +17,7 @@ import tf
 
 from fake_state import *
 from detection_pickup_state import *
+from detection_drive_state import *
 from move_state_util import *
 from arm_state_util import *
 
@@ -47,7 +48,7 @@ def out_cb(outcome_map):
     
 def monitor_cb(ud, msg):
     ud['detection_msg'] = msg
-    return False
+    return math.isnan(msg.pose.pose.position.x)
 
 
 
@@ -96,9 +97,19 @@ def main():
                                       smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
-                               transitions={'succeeded':'PICKUP_PRECACHE',
+                               transitions={'succeeded':'NAV_TO_PRECACHE',
                                             'failed':'failed'})
+
+        smach.StateMachine.add('NAV_TO_PRECACHE', DetectionDriveState(),
+                               transitions={'succeeded':'WAIT_FOR_DETECTION_AFTER_NAV',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
         
+        smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV',
+                              smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                               transitions={'invalid':'PICKUP_PRECACHE',
+                                            'valid':'failed',
+                                            'preempted':'failed'})
         smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
                                transitions={'succeeded':'NAV_TO_PLATFORM',
                                             'aborted':'failed',
