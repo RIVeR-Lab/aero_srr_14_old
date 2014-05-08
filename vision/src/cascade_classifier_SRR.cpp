@@ -120,6 +120,7 @@ for (int i = 0; i < 50; i++) {
 	return sum / (float) ctr;
 }
 
+
 void cascade_classifier_node::m_computeDisparityPoint()
     {
 	
