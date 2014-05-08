@@ -71,7 +71,7 @@ def main():
                                             outcome_cb=out_cb)
         with wait_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                                      smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
                 #smach.Concurrence.add('WAIT_DETECT_FAKE', FakeState())
         smach.StateMachine.add('WAIT_DETECT', wait_detect_concurrence,
                                transitions={'succeeded':'DETECTION_PICKUP',
