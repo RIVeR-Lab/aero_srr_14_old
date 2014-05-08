@@ -25,11 +25,11 @@ from arm_state_util import *
 def child_term_cb(outcome_map):
     if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
         return True
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'succeeded':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'succeeded':
         return True
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'preempted':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'preempted':
         return True
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'aborted':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'aborted':
         return True
     else:
         return False
@@ -37,11 +37,11 @@ def child_term_cb(outcome_map):
 def out_cb(outcome_map):
     if outcome_map['WAIT_FOR_DETECTION'] == 'invalid':
         return 'succeeded'
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'succeeded':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'succeeded':
         return 'failed'
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'preempted':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'preempted':
         return 'failed'
-    elif outcome_map['WAIT_FOR_DETECTION'] == 'aborted':
+    elif outcome_map['DRIVE_WHILE_DETECTING'] == 'aborted':
         return 'failed'
     else:
         return 'failed'
@@ -94,7 +94,7 @@ def main():
                                                     outcome_cb=out_cb)
         with drive_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
                                transitions={'succeeded':'A',
@@ -105,7 +105,7 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('B',
-                              smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                              smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
                                transitions={'invalid':'NAV_TO_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})

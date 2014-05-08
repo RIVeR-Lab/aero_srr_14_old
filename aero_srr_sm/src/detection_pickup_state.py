@@ -33,9 +33,9 @@ class DetectionPickupState(smach.State):
 
             trajectory = [create_arm_api_pose(0.5, -0.2, 0.4, -math.pi/2, math.pi/2, 0),
                             create_arm_api_pose(object_position.x, object_position.y-0.1, 0.4, -math.pi/2, math.pi/2, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y-0.08, object_position.z, -math.pi/2, 0, 0), 1, 1, 1),
-                            create_arm_api_pose(object_position.x, object_position.y, object_position.z, -math.pi/2, 0, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y, object_position.z, -math.pi/2, 0, 0), 60, 60, 60),
+                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y-0.08, object_position.z+0.1, -math.pi/2, 0, 0), 1, 1, 1),
+                            create_arm_api_pose(object_position.x, object_position.y+0.04, object_position.z+0.1, -math.pi/2, 0, 0),
+                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y+0.04, object_position.z+0.1, -math.pi/2, 0, 0), 60, 60, 60),
                             create_arm_api_pose(object_position.x, object_position.y, object_position.z+0.2, -math.pi/2, 0, 0)]
             goal=TrajectoryGoal(trajectory);
             self.client.send_goal(goal)

@@ -5,7 +5,7 @@ namespace vision{
   using namespace message_filters::sync_policies;
 
   CascadeClassifier::CascadeClassifier(ros::NodeHandle nh, ros::NodeHandle pnh): it_(nh), stereo_model_init_(false), show_windows_(false){
-    scale_factor_ = 1.15;
+    scale_factor_ = 1.07;
     min_neighbors_ = 5;
     min_size_ = cv::Size(50, 50);
     max_size_ = cv::Size(150, 150);
@@ -105,9 +105,9 @@ namespace vision{
 			 detection.y + detection.height / 2);
 
 	cv::Point2d disparity_center(detection_center.x,
-			 detection_center.y+30);
+			 detection_center.y+40);
 
-	float disp_val = average_disparity(d_image, detection_center, 40, 60);
+	float disp_val = average_disparity(d_image, detection_center, 30, 50);
 	if(disp_val<0){
           ROS_WARN("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
 	  cv::ellipse(l_mat, detection_center,
@@ -121,10 +121,10 @@ namespace vision{
 		    0, 0, 360, cv::Scalar(255, 0, 0), 2, 8, 0);
 
 	cv::rectangle(disparity_color,
-		      cv::Point(detection_center.x - 40 / 2,
-                                detection_center.y - 60 / 2),
-		      cv::Point(detection_center.x + 40 / 2,
-                                detection_center.y + 60 / 2),
+		      cv::Point(detection_center.x - 30 / 2,
+                                detection_center.y - 50 / 2),
+		      cv::Point(detection_center.x + 30 / 2,
+                                detection_center.y + 50 / 2),
 		      cv::Scalar(255, 0, 0), 2);
 
 
@@ -145,7 +145,7 @@ namespace vision{
 	  tf_listener_.waitForTransform(robot_frame_, l_camera_frame, time, ros::Duration(.50));
 	  tf_listener_.transformPoint(robot_frame_, camera_point, robot_point);
 
-          ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f, and in robot frame (%f, %f, %f)", (int)detection_center.x, (int)detection_center.y, disp_val, robot_point.point.x, robot_point.point.y, robot_point.point.z);
+          ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m), and in robot frame (%f, %f, %f)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z, robot_point.point.x, robot_point.point.y, robot_point.point.z);
 
 	  ObjectLocationMsg msg;
 	  msg.header = robot_point.header;
