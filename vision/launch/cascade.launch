@@ -1,9 +1,22 @@
 <launch>
 
   <node pkg="vision" type="cascade_classifier" name="detector_node" ns="aero/lower_stereo" output="screen">
-
     <param name="cascade_path" value="$(find vision)/cascadeTraining4bHookdata/cascade.xml"/>
     <param name="show_windows" value="false"/>
   </node>
 
+  <node pkg="robot_localization" type="ekf_localization_node" name="detection_ekf" ns="aero/lower_stereo" output="screen">
+    <param name="pose0" value="object_detection"/>
+    <rosparam param="pose0_config">[true, true, true, true, true, true]</rosparam>
+    <rosparam param="pose0_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="twist0" value="object_detection_velocity"/>
+    <rosparam param="twist0_config">[true, true, true, true, true, true]</rosparam>
+    <rosparam param="twist0_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="odom_frame" value="aero/odom"/>
+    <param name="base_link_frame" value="aero/sample_detection"/>
+
+    <remap from="odometry/filtered" to="object_detection/filtered"/>
+  </node>
 </launch>

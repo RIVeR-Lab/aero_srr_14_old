@@ -4,7 +4,7 @@ project(vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs)
+find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs robot_localization)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -80,7 +80,7 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES vision
-  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs
+  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs robot_localization
 #  DEPENDS OpenCV image_transport nodelet roscpp
 )
 
@@ -104,11 +104,12 @@ include_directories(include
 ## Declare a cpp executable
 add_executable(cascade src/cascade_classifier_SRR.cpp)
 add_executable(image src/staticImagePub.cpp)
+add_dependencies(cascade vision_generate_messages_cpp)
+add_dependencies(image vision_generate_messages_cpp)
 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(vision_node vision_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(cascade 
@@ -119,7 +120,7 @@ target_link_libraries(image
 
 add_executable(cascade_classifier src/cascade_classifier.cpp)
 target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
-
+add_dependencies(cascade_classifier vision_generate_messages_cpp)
 
 
 

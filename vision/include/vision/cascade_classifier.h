@@ -9,7 +9,7 @@
 #include <stereo_msgs/DisparityImage.h>
 #include <classifierTypes.h>
 #include <geometry_msgs/PointStamped.h>
-#include <vision/ObjectLocationMsg.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>

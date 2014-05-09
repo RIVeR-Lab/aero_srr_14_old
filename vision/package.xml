@@ -51,6 +51,7 @@
 <build_depend>tf</build_depend>
  <build_depend>message_generation</build_depend> 
 <build_depend>std_msgs</build_depend>
+<build_depend>robot_localization</build_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>nodelet</run_depend>
@@ -62,6 +63,7 @@
 <run_depend>tf</run_depend>
  <run_depend>message_runtime</run_depend> 
 <run_depend>std_msgs</run_depend> 
+<run_depend>robot_localization</run_depend> 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

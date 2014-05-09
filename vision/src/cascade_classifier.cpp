@@ -1,5 +1,6 @@
 #include <vision/cascade_classifier.h>
 #include <boost/foreach.hpp>
+#include <boost/assign/list_of.hpp>
 
 namespace vision{
   using namespace message_filters::sync_policies;
@@ -25,7 +26,7 @@ namespace vision{
     info_synchronizer_->registerCallback(boost::bind(&CascadeClassifier::infoCb,
 					    this, _1, _2));
 
-    object_location_pub_ = nh.advertise<vision::ObjectLocationMsg>("object_detection", 5);
+    object_location_pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("object_detection", 5);
     disparity_pub_ = it_.advertise("object_detection_disparity", 1);
     image_pub_ = it_.advertise("object_detection_image", 1);
 
@@ -137,26 +138,21 @@ namespace vision{
 	geometry_msgs::PointStamped camera_point, robot_point;
 	camera_point.header.frame_id = l_camera_frame;
 	camera_point.header.stamp = time;
-	robot_point.header.frame_id = robot_frame_;
-	robot_point.header.stamp = time;
 	tf::pointTFToMsg(position_tf, camera_point.point);
 
-	try{
-	  tf_listener_.waitForTransform(robot_frame_, l_camera_frame, time, ros::Duration(.50));
-	  tf_listener_.transformPoint(robot_frame_, camera_point, robot_point);
+        ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z);
 
-          ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m), and in robot frame (%f, %f, %f)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z, robot_point.point.x, robot_point.point.y, robot_point.point.z);
-
-	  ObjectLocationMsg msg;
-	  msg.header = robot_point.header;
-	  msg.pose.header = robot_point.header;
-	  msg.pose.pose.position = robot_point.point;
-	  object_location_pub_.publish(msg);
-	}
-	catch(std::exception& e){
-	  ROS_ERROR_STREAM(e.what());
-	}
-
+	geometry_msgs::PoseWithCovarianceStamped msg;
+	msg.header = camera_point.header;
+	msg.pose.pose.position = camera_point.point;
+	msg.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
+	msg.pose.covariance = boost::assign::list_of(0.1) (0)   (0)  (0)  (0)  (0)
+						      (0)  (0.1)  (0)  (0)  (0)  (0)
+						      (0)   (0)  (0.2) (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0) ;
+	object_location_pub_.publish(msg);
 
       }
     }
