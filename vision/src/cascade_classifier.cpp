@@ -82,7 +82,11 @@ namespace vision{
   }
 
   void CascadeClassifier::detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, cv::Mat& l_mat, cv::Mat& d_image){
+#ifdef USE_GPU
+    cv::gpu::GpuMat image_gray;
+#else
     cv::Mat image_gray;
+#endif
     cv::cvtColor(l_mat, image_gray, CV_RGB2GRAY);
     cv::equalizeHist(image_gray, image_gray);
 
@@ -93,7 +97,17 @@ namespace vision{
     std::vector<cv::Rect> detections;
 
     ros::Time classifier_start = ros::Time::now();
+#ifdef USE_GPU
+    cv::gpu::GpuMat gpu_detections_mat;
+    int num_detections = cascade_classifier_.detectMultiScale(image_gray, gpu_detections_mat, scale_factor_, min_neighbors_, min_size_);
+    cv::Mat detections_mat;
+    gpu_detections_mat.colRange(0, num_detections).download(detections_mat);
+    cv::Rect* detections_rects = detections_mat.ptr<cv::Rect>();
+    for(int i = 0; i < num_detections; ++i)
+      detections.push_back(detections_rects[i]);
+#else
     cascade_classifier_.detectMultiScale(image_gray, detections, scale_factor_, min_neighbors_, 0, min_size_, max_size_);
+#endif
     ROS_INFO("Classification took %fs", (ros::Time::now()-classifier_start).toSec());
 
     {
@@ -213,7 +227,5 @@ int main(int argc, char **argv){
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
   vision::CascadeClassifier classifier(nh, pnh);
-  //ros::spin();
-  ros::MultiThreadedSpinner spinner(4);
-  spinner.spin();
+  ros::spin();
 }

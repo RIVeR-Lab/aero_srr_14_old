@@ -1,9 +1,18 @@
+#ifndef CASCADE_CLASSIFIER_H_
+#define CASCADE_CLASSIFIER_H_
+
+#define USE_GPU 1
+
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#ifdef USE_GPU
+#include <opencv2/gpu/gpu.hpp>
+#endif
+
 #include <time.h>
 #include <image_geometry/stereo_camera_model.h>
 #include <stereo_msgs/DisparityImage.h>
@@ -60,7 +69,11 @@ class CascadeClassifier{
   image_transport::Publisher disparity_pub_;
   image_transport::Publisher image_pub_;
 
+#ifdef USE_GPU
+  cv::gpu::CascadeClassifier_GPU cascade_classifier_;
+#else
   cv::CascadeClassifier cascade_classifier_;
+#endif
 
   bool show_windows_;
 
@@ -83,3 +96,5 @@ class CascadeClassifier{
 
 
 }
+
+#endif
