@@ -122,6 +122,8 @@ add_executable(cascade_classifier src/cascade_classifier.cpp)
 target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
 add_dependencies(cascade_classifier vision_generate_messages_cpp)
 
+add_executable(zero_twist_publisher src/zero_twist_publisher.cpp)
+target_link_libraries(zero_twist_publisher ${catkin_LIBRARIES})
 
 
 

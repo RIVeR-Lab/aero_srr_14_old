@@ -27,8 +27,8 @@ namespace vision{
 					    this, _1, _2));
 
     object_location_pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("object_detection", 5);
-    disparity_pub_ = it_.advertise("object_detection_disparity", 1);
-    image_pub_ = it_.advertise("object_detection_image", 1);
+    disparity_pub_ = it_.advertise("object_detection/disparity", 1);
+    image_pub_ = it_.advertise("object_detection/image", 1);
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
     sub_l_image_.subscribe(it_, "left/image_raw", 1, hints);
@@ -146,9 +146,9 @@ namespace vision{
 	msg.header = camera_point.header;
 	msg.pose.pose.position = camera_point.point;
 	msg.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
-	msg.pose.covariance = boost::assign::list_of(0.1) (0)   (0)  (0)  (0)  (0)
-						      (0)  (0.1)  (0)  (0)  (0)  (0)
-						      (0)   (0)  (0.2) (0)  (0)  (0)
+	msg.pose.covariance = boost::assign::list_of(0.2) (0)   (0)  (0)  (0)  (0)
+						      (0)  (0.2)  (0)  (0)  (0)  (0)
+						      (0)   (0)  (0.3) (0)  (0)  (0)
 						      (0)   (0)   (0)  (0)  (0)  (0)
 						      (0)   (0)   (0)  (0)  (0)  (0)
 						      (0)   (0)   (0)  (0)  (0)  (0) ;

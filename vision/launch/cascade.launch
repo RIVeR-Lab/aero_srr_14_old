@@ -10,7 +10,7 @@
     <rosparam param="pose0_config">[true, true, true, true, true, true]</rosparam>
     <rosparam param="pose0_differential">[false, false, false, false, false, false]</rosparam>
 
-    <param name="twist0" value="object_detection_velocity"/>
+    <param name="twist0" value="object_detection_zero_twist"/>
     <rosparam param="twist0_config">[true, true, true, true, true, true]</rosparam>
     <rosparam param="twist0_differential">[false, false, false, false, false, false]</rosparam>
 
@@ -18,5 +18,10 @@
     <param name="base_link_frame" value="aero/sample_detection"/>
 
     <remap from="odometry/filtered" to="object_detection/filtered"/>
+  </node>
+
+
+  <node pkg="vision" type="zero_twist_publisher" name="zero_twist_publisher" ns="aero/lower_stereo" output="screen">
+    <remap from="zero_twist" to="object_detection_zero_twist"/>
   </node>
 </launch>
