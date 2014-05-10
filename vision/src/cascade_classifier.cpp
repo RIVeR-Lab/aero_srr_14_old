@@ -17,6 +17,15 @@ namespace vision{
     pnh.getParam("cascade_path", cascade_path);
 
 
+
+#ifdef USE_GPU
+    ROS_INFO("Using GPU Detector");
+#else
+    ROS_INFO("Using CPU Detector");
+#endif
+
+
+
     image_synchronizer_.reset(new ImageSynchronizer(ImageSyncPolicy(6), sub_l_image_, sub_d_image_));
     image_synchronizer_->registerCallback(boost::bind(&CascadeClassifier::imageCb,
 					    this, _1, _2));
@@ -98,7 +107,6 @@ namespace vision{
 
     ros::Time classifier_start = ros::Time::now();
 #ifdef USE_GPU
-    ROS_INFO("GPU Detect");
     cv::gpu::GpuMat gpu_detections_mat;
     int num_detections = cascade_classifier_.detectMultiScale(image_gray_gpu, gpu_detections_mat, scale_factor_, min_neighbors_, min_size_);
     cv::Mat detections_mat;
@@ -107,7 +115,6 @@ namespace vision{
     for(int i = 0; i < num_detections; ++i)
       detections.push_back(detections_rects[i]);
 #else
-    ROS_INFO("CPU Detect");
     cascade_classifier_.detectMultiScale(image_gray, detections, scale_factor_, min_neighbors_, 0, min_size_, max_size_);
 #endif
 
