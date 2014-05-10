@@ -82,13 +82,13 @@ namespace vision{
   }
 
   void CascadeClassifier::detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, cv::Mat& l_mat, cv::Mat& d_image){
-#ifdef USE_GPU
-    cv::gpu::GpuMat image_gray;
-#else
+    ros::Time pre_start = ros::Time::now();
     cv::Mat image_gray;
-#endif
     cv::cvtColor(l_mat, image_gray, CV_RGB2GRAY);
     cv::equalizeHist(image_gray, image_gray);
+#ifdef USE_GPU
+    cv::gpu::GpuMat image_gray_gpu(image_gray);
+#endif
 
     cv::Mat disparity_color;
     cv::convertScaleAbs(d_image, disparity_color, 100, 0.0);
@@ -98,18 +98,20 @@ namespace vision{
 
     ros::Time classifier_start = ros::Time::now();
 #ifdef USE_GPU
+    ROS_INFO("GPU Detect");
     cv::gpu::GpuMat gpu_detections_mat;
-    int num_detections = cascade_classifier_.detectMultiScale(image_gray, gpu_detections_mat, scale_factor_, min_neighbors_, min_size_);
+    int num_detections = cascade_classifier_.detectMultiScale(image_gray_gpu, gpu_detections_mat, scale_factor_, min_neighbors_, min_size_);
     cv::Mat detections_mat;
     gpu_detections_mat.colRange(0, num_detections).download(detections_mat);
     cv::Rect* detections_rects = detections_mat.ptr<cv::Rect>();
     for(int i = 0; i < num_detections; ++i)
       detections.push_back(detections_rects[i]);
 #else
+    ROS_INFO("CPU Detect");
     cascade_classifier_.detectMultiScale(image_gray, detections, scale_factor_, min_neighbors_, 0, min_size_, max_size_);
 #endif
-    ROS_INFO("Classification took %fs", (ros::Time::now()-classifier_start).toSec());
 
+    ros::Time post_start = ros::Time::now();
     {
       boost::lock_guard<boost::mutex> lock(stereo_model_mutex_);
       if(!stereo_model_init_)
@@ -170,10 +172,10 @@ namespace vision{
 	catch(std::exception& e){
 	  ROS_ERROR_STREAM(e.what());
 	}
-
-
       }
+
     }
+    ros::Time publish_start = ros::Time::now();
 
     cv_bridge::CvImage disparity_msg;
     disparity_msg.header.stamp   = time;
@@ -195,6 +197,8 @@ namespace vision{
       cv::imshow("disparity", disparity_color);
       cv::waitKey(3);
     }
+
+    ROS_INFO("Classification done,  pre: %fs, class: %fs, post: %fs, publish: %fs", (classifier_start-pre_start).toSec(), (post_start-classifier_start).toSec(), (publish_start-post_start).toSec(), (ros::Time::now()-publish_start).toSec());
   }
 
   float CascadeClassifier::average_disparity(const cv::Mat& disp, const cv::Point2d& pt, int width, int height) {
