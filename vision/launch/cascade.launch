@@ -2,7 +2,7 @@
 
   <node pkg="vision" type="cascade_classifier" name="detector_node" ns="aero/lower_stereo" output="screen">
 
-    <param name="cascade_path" value="$(find vision)/trainingSnapshots/haartraining_1000samples_data.xml"/>
+    <param name="cascade_path" value="$(find vision)/training/HAAROLD-6-99-200-500.xml"/>
     <param name="show_windows" value="false"/>
   </node>
 
