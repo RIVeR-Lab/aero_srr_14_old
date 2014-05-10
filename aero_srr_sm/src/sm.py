@@ -76,12 +76,12 @@ def main():
                                             'preempted':'failed'})
 
         smach.StateMachine.add('LEAVE_PLATFORM',
-                               create_move_state(1, 0, 0),
+                               create_move_state(2, 0, 0),
                                transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
-                               create_move_state(2, 0, 0),
+                               create_move_state(3, 0, 0),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
@@ -116,21 +116,21 @@ def main():
                                             'preempted':'failed'})
         
         smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV',
-                              smach_ros.MonitorState("/aero/ObjectPose", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                              smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
                                transitions={'invalid':'PICKUP_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})
-        smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
-                               transitions={'succeeded':'NAV_TO_PLATFORM',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-        #smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
+        #smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
         #                       transitions={'succeeded':'NAV_TO_PLATFORM',
         #                                    'aborted':'failed',
         #                                    'preempted':'failed'})
+        smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
+                               transitions={'succeeded':'NAV_TO_PLATFORM',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
 
         smach.StateMachine.add('NAV_TO_PLATFORM',
-                               create_move_state(1, 0, 0),
+                               create_move_state(2, 0, 0),
                                transitions={'succeeded':'NAV_ONTO_PLATFORM',
                                             'aborted':'failed',
                                             'preempted':'failed'})

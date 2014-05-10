@@ -1,11 +1,12 @@
 #include <vision/cascade_classifier.h>
 #include <boost/foreach.hpp>
+#include <boost/assign/list_of.hpp>
 
 namespace vision{
   using namespace message_filters::sync_policies;
 
   CascadeClassifier::CascadeClassifier(ros::NodeHandle nh, ros::NodeHandle pnh): it_(nh), stereo_model_init_(false), show_windows_(false){
-    scale_factor_ = 1.07;
+    scale_factor_ = 1.05;
     min_neighbors_ = 5;
     min_size_ = cv::Size(50, 50);
     max_size_ = cv::Size(150, 150);
@@ -34,9 +35,9 @@ namespace vision{
     info_synchronizer_->registerCallback(boost::bind(&CascadeClassifier::infoCb,
 					    this, _1, _2));
 
-    object_location_pub_ = nh.advertise<vision::ObjectLocationMsg>("object_detection", 5);
-    disparity_pub_ = it_.advertise("object_detection_disparity", 1);
-    image_pub_ = it_.advertise("object_detection_image", 1);
+    object_location_pub_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("object_detection", 5);
+    disparity_pub_ = it_.advertise("object_detection/disparity", 1);
+    image_pub_ = it_.advertise("object_detection/image", 1);
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
     sub_l_image_.subscribe(it_, "left/image_raw", 1, hints);
@@ -160,25 +161,22 @@ namespace vision{
 	geometry_msgs::PointStamped camera_point, robot_point;
 	camera_point.header.frame_id = l_camera_frame;
 	camera_point.header.stamp = time;
-	robot_point.header.frame_id = robot_frame_;
-	robot_point.header.stamp = time;
 	tf::pointTFToMsg(position_tf, camera_point.point);
 
-	try{
-	  tf_listener_.waitForTransform(robot_frame_, l_camera_frame, time, ros::Duration(.50));
-	  tf_listener_.transformPoint(robot_frame_, camera_point, robot_point);
+        ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z);
 
-          ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m), and in robot frame (%f, %f, %f)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z, robot_point.point.x, robot_point.point.y, robot_point.point.z);
+	geometry_msgs::PoseWithCovarianceStamped msg;
+	msg.header = camera_point.header;
+	msg.pose.pose.position = camera_point.point;
+	msg.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0, 0, 0);
+	msg.pose.covariance = boost::assign::list_of(0.2) (0)   (0)  (0)  (0)  (0)
+						      (0)  (0.2)  (0)  (0)  (0)  (0)
+						      (0)   (0)  (0.3) (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0)
+						      (0)   (0)   (0)  (0)  (0)  (0) ;
+	object_location_pub_.publish(msg);
 
-	  ObjectLocationMsg msg;
-	  msg.header = robot_point.header;
-	  msg.pose.header = robot_point.header;
-	  msg.pose.pose.position = robot_point.point;
-	  object_location_pub_.publish(msg);
-	}
-	catch(std::exception& e){
-	  ROS_ERROR_STREAM(e.what());
-	}
       }
 
     }
@@ -231,6 +229,7 @@ namespace vision{
 
 
 }
+<<<<<<< HEAD
 
 
 int main(int argc, char **argv){
@@ -240,3 +239,5 @@ int main(int argc, char **argv){
   vision::CascadeClassifier classifier(nh, pnh);
   ros::spin();
 }
+=======
+>>>>>>> vision-arm

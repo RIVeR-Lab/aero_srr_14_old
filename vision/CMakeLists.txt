@@ -4,7 +4,7 @@ project(vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs)
+find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs robot_localization)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -41,11 +41,11 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- add_message_files(
-	FILES
-  ObjectLocationMsg.msg
+# add_message_files(
+#	FILES
+#  ObjectLocationMsg.msg
 #   Message2.msg
- )
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -62,11 +62,11 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
-   geometry_msgs  # Or other packages containing msgs
- )
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   geometry_msgs  # Or other packages containing msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -80,7 +80,7 @@ find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geom
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES vision
-  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs
+  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs robot_localization
 #  DEPENDS OpenCV image_transport nodelet roscpp
 )
 
@@ -96,31 +96,27 @@ include_directories(include
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a cpp library
- add_library(detectionManager
-   src/detection_manager.cpp
- )
-
 ## Declare a cpp executable
-add_executable(cascade src/cascade_classifier_SRR.cpp)
 add_executable(image src/staticImagePub.cpp)
+target_link_libraries(image ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(vision_node vision_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(cascade 
-   ${catkin_LIBRARIES} detectionManager)
-target_link_libraries(image 
-   ${catkin_LIBRARIES}
-)
 
-add_executable(cascade_classifier src/cascade_classifier.cpp)
+add_library(cascade_classifier src/cascade_classifier.cpp)
 target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
 
+add_library(cascade_classifier_nodelet src/cascade_classifier_nodelet.cpp)
+target_link_libraries(cascade_classifier_nodelet cascade_classifier ${catkin_LIBRARIES})
 
+add_executable(cascade_classifier_node src/cascade_classifier_node.cpp)
+target_link_libraries(cascade_classifier_node cascade_classifier ${catkin_LIBRARIES})
+
+add_executable(zero_twist_publisher src/zero_twist_publisher.cpp)
+target_link_libraries(zero_twist_publisher ${catkin_LIBRARIES})
 
 
 
