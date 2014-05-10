@@ -106,8 +106,11 @@ target_link_libraries(image ${catkin_LIBRARIES})
 
 ## Specify libraries to link a library or executable target against
 
-add_executable(cascade_classifier src/cascade_classifier.cpp)
+add_library(cascade_classifier src/cascade_classifier.cpp)
 target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
+
+add_executable(cascade_classifier_node src/cascade_classifier_node.cpp)
+target_link_libraries(cascade_classifier_node cascade_classifier ${catkin_LIBRARIES})
 
 add_executable(zero_twist_publisher src/zero_twist_publisher.cpp)
 target_link_libraries(zero_twist_publisher ${catkin_LIBRARIES})

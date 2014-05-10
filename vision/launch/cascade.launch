@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="vision" type="cascade_classifier" name="detector_node" ns="aero/lower_stereo" output="screen">
+  <node pkg="vision" type="cascade_classifier_node" name="detector_node" ns="aero/lower_stereo" output="screen">
     <param name="cascade_path" value="$(find vision)/cascadeTraining4bHookdata/cascade.xml"/>
     <param name="show_windows" value="false"/>
   </node>
