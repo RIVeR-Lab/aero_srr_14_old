@@ -1,0 +1,6 @@
+<library path="lib/libcascade_classifier_nodelet">
+  <class name="vision/CascadeClassifierNodelet" type="vision::CascadeClassifierNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+    </description>
+  </class>
+</library>

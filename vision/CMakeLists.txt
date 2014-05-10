@@ -109,6 +109,9 @@ target_link_libraries(image ${catkin_LIBRARIES})
 add_library(cascade_classifier src/cascade_classifier.cpp)
 target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
 
+add_library(cascade_classifier_nodelet src/cascade_classifier_nodelet.cpp)
+target_link_libraries(cascade_classifier_nodelet cascade_classifier ${catkin_LIBRARIES})
+
 add_executable(cascade_classifier_node src/cascade_classifier_node.cpp)
 target_link_libraries(cascade_classifier_node cascade_classifier ${catkin_LIBRARIES})
 
