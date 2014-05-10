@@ -7,7 +7,6 @@
 #include <time.h>
 #include <image_geometry/stereo_camera_model.h>
 #include <stereo_msgs/DisparityImage.h>
-#include <classifierTypes.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
