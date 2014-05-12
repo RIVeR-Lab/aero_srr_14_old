@@ -22,7 +22,9 @@ class DetectionPickupState(smach.State):
 
         self.client.wait_for_server()
 
-        object_location = userdata['detection_msg'].pose;
+        object_location = PoseStamped()
+        object_location.pose = userdata['detection_msg'].pose.pose;
+        object_location.header = userdata['detection_msg'].header;
         print('Got location ', str(object_location) )
 
         try:

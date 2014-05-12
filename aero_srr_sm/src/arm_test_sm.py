@@ -9,8 +9,8 @@ from actionlib import *
 from actionlib.msg import *
 from std_msgs.msg import *
 from geometry_msgs.msg import *
+from nav_msgs.msg import *
 from move_base_msgs.msg import *
-from vision.msg import *
 import math
 import tf2_ros
 import tf
@@ -46,6 +46,7 @@ def out_cb(outcome_map):
         return 'failed'
     
 def monitor_cb(ud, msg):
+    print msg
     ud['detection_msg'] = msg
     return False
     
@@ -71,7 +72,7 @@ def main():
                                             outcome_cb=out_cb)
         with wait_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']))
                 #smach.Concurrence.add('WAIT_DETECT_FAKE', FakeState())
         smach.StateMachine.add('WAIT_DETECT', wait_detect_concurrence,
                                transitions={'succeeded':'DETECTION_PICKUP',
