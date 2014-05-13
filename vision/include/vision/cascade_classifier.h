@@ -1,7 +1,7 @@
 #ifndef CASCADE_CLASSIFIER_H_
 #define CASCADE_CLASSIFIER_H_
 
-#define USE_GPU 1
+//#define USE_GPU 1
 
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
@@ -37,15 +37,14 @@ using namespace stereo_msgs;
 using namespace message_filters::sync_policies;
 using namespace boost;
 
-
-
-class CascadeClassifier{
 #ifdef USE_GPU
   typedef cv::gpu::GpuMat InternalMat;
 #else
   typedef cv::Mat InternalMat;
 #endif
 
+class CascadeClassifier{
+ private:
   typedef ApproximateTime<Image, Image, CameraInfo, CameraInfo> ImageSyncPolicy;
   typedef message_filters::Synchronizer<ImageSyncPolicy> ImageSynchronizer;
 
@@ -87,6 +86,28 @@ class CascadeClassifier{
   cv::Size min_size_;
   cv::Size max_size_;
 
+  inline int window_size(){
+#ifdef USE_GPU
+    return block_matcher_.winSize;
+#else
+    return block_matcher_.state->SADWindowSize;
+#endif
+  }
+  inline int num_disparities(){
+#ifdef USE_GPU
+    return block_matcher_.ndisp;
+#else
+    return block_matcher_.state->numberOfDisparities;
+#endif
+  }
+  inline int min_disparity(){
+#ifdef USE_GPU
+    return 0;
+#else
+    return block_matcher_.state->minDisparity;
+#endif
+  }
+
 
   void imageCb(const ImageConstPtr& l_image_msg,
 	       const ImageConstPtr& r_image_msg,
@@ -94,9 +115,9 @@ class CascadeClassifier{
 	       const CameraInfoConstPtr& r_info_msg);
 
 
-  void compute_disparity(const InternalMat& left, const InternalMat& right, const InternalMat& depth, std_msgs::Header header, int width, int height);
+  void compute_disparity(const InternalMat& left, const InternalMat& right, cv::Mat& d_image);
 
-  void detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, const InternalMat& l_image, const InternalMat& d_image);
+  void detect(const std::string& l_camera_frame, const ros::Time& time, const InternalMat& l_image, const cv::Mat& d_image, cv::Mat& l_feedback_image, cv::Mat& d_feedback_image);
   float average_disparity(const cv::Mat& disp, const cv::Point2d& pt, int width, int height);
 };
 

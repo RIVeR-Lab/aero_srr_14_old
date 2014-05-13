@@ -101,21 +101,13 @@ namespace vision{
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
-    InternalMat d_image;
-    InternalMat l_image(l_image_ptr->image);
-    InternalMat r_image(r_image_ptr->image);
-    compute_disparity(l_image, r_image, d_image, l_info_msg->header, l_image_msg->width, l_image_msg->height);
 
-    detect_and_publish(l_image_msg->header.frame_id, l_image_msg->header.stamp, l_image_ptr->image, d_image);
-  }
-
-  void CascadeClassifier::compute_disparity(const InternalMat& l_image, const InternalMat& r_image, std_msgs::Header header, int img_width, int img_height){
-    ros::Time disp_start = ros::Time::now();
+    //create disparity message
     DisparityImagePtr disp_msg = boost::make_shared<DisparityImage>();
-    disp_msg->header         = header;
-    disp_msg->image.header   = header;
-    disp_msg->image.height   = img_height;
-    disp_msg->image.width    = img_width;
+    disp_msg->header         = l_image_msg->header;
+    disp_msg->image.header   = l_image_msg->header;
+    disp_msg->image.height   = l_image_msg->height;
+    disp_msg->image.width    = l_image_msg->width;
     disp_msg->image.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
     disp_msg->image.step     = disp_msg->image.width * sizeof(float);
     disp_msg->image.data.resize(disp_msg->image.height * disp_msg->image.step);
@@ -123,10 +115,9 @@ namespace vision{
     disp_msg->T = stereo_model_.baseline();
 
     // Compute window of (potentially) valid disparities
-    cv::Ptr<CvStereoBMState> params = block_matcher_.state;
-    int border   = params->SADWindowSize / 2;
-    int left   = params->numberOfDisparities + params->minDisparity + border - 1;
-    int wtf = (params->minDisparity >= 0) ? border + params->minDisparity : std::max(border, -params->minDisparity);
+    int border   = window_size() / 2;
+    int left   = num_disparities() + min_disparity() + border - 1;
+    int wtf = (min_disparity() >= 0) ? border + min_disparity() : std::max(border, -min_disparity());
     int right  = disp_msg->image.width - 1 - wtf;
     int top    = border;
     int bottom = disp_msg->image.height - 1 - border;
@@ -136,33 +127,64 @@ namespace vision{
     disp_msg->valid_window.height   = bottom - top;
 
     // Disparity search range
-    disp_msg->min_disparity = params->minDisparity;
-    disp_msg->max_disparity = params->minDisparity + params->numberOfDisparities - 1;
+    disp_msg->min_disparity = min_disparity();
+    disp_msg->max_disparity = min_disparity() + num_disparities() - 1;
     disp_msg->delta_d = 1.0 / 16; // OpenCV uses 16 disparities per pixel
 
-    cv::Mat_<float> disp_image(disp_msg->image.height, disp_msg->image.width,
-			       reinterpret_cast<float*>(&disp_msg->image.data[0]),
-			       disp_msg->image.step);
+    cv::Mat_<float> d_image(disp_msg->image.height, disp_msg->image.width,
+                             reinterpret_cast<float*>(&disp_msg->image.data[0]),
+                             disp_msg->image.step);
+    InternalMat l_image(l_image_ptr->image);
+    InternalMat r_image(r_image_ptr->image);
 
-    // Perform block matching to find the disparities
-    block_matcher_(l_image, r_image, disp_image, CV_32F);
+    compute_disparity(l_image, r_image, d_image);
+    disparity_pub_.publish(disp_msg);
+
+    cv::Mat l_feedback_image;
+    //cv::convertScaleAbs(l_image_ptr->image, l_feedback_image, 100, 0.0);
+    cv::cvtColor(l_image_ptr->image, l_feedback_image, CV_GRAY2RGB);
+
+    cv::Mat d_feedback_image;
+    cv::convertScaleAbs(d_image, d_feedback_image, 100, 0.0);
+    cv::cvtColor(d_feedback_image, d_feedback_image, CV_GRAY2RGB);
+
+    detect(l_image_msg->header.frame_id, l_image_msg->header.stamp, l_image, d_image, l_feedback_image, d_feedback_image);
+
+
+    cv_bridge::CvImage disparity_msg;
+    disparity_msg.header  = l_image_msg->header;
+    disparity_msg.encoding = sensor_msgs::image_encodings::BGR8;
+    disparity_msg.image    = d_feedback_image;
+    object_detection_disparity_pub_.publish(disparity_msg.toImageMsg());
+    cv_bridge::CvImage image_msg;
+    image_msg.header  = l_image_msg->header;
+    image_msg.encoding = sensor_msgs::image_encodings::BGR8;
+    image_msg.image    = l_feedback_image;
+    object_detection_image_pub_.publish(image_msg.toImageMsg());
+
+  }
+
+  void CascadeClassifier::compute_disparity(const InternalMat& l_image, const InternalMat& r_image, cv::Mat& d_image){
+    ros::Time disp_start = ros::Time::now();
+
+#ifdef USE_GPU
+    cv::gpu::GpuMat gpu_d_image;
+    block_matcher_(l_image, r_image, gpu_d_image);
+    gpu_d_image.download(d_image);
+#else
+    block_matcher_(l_image, r_image, d_image, CV_32F);
+#endif
 
     double cx_l = stereo_model_.left().cx();
     double cx_r = stereo_model_.right().cx();
     if (cx_l != cx_r)
-      cv::subtract(disp_image, cv::Scalar(cx_l - cx_r), disp_image);
+      cv::subtract(d_image, cv::Scalar(cx_l - cx_r), d_image);
 
-    disparity_pub_.publish(disp_msg);
     ROS_INFO("Disparity took %fs", (ros::Time::now()-disp_start).toSec());
-    return disp_image;
   }
 
 
-  void CascadeClassifier::detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, const InternalMat& l_image, const InternalMat& d_image){
-    /*cv::Mat disparity_color;
-    cv::convertScaleAbs(d_image, disparity_color, 100, 0.0);
-
-    cv::cvtColor(disparity_color, disparity_color, CV_GRAY2RGB);*/
+  void CascadeClassifier::detect(const std::string& l_camera_frame, const ros::Time& time, const InternalMat& l_image, const cv::Mat& d_image, cv::Mat& l_feedback_image, cv::Mat& d_feedback_image){
 
     std::vector<cv::Rect> detections;
 
@@ -185,28 +207,45 @@ namespace vision{
 	cv::Point2d detection_center(detection.x + detection.width / 2,
 			 detection.y + detection.height / 2);
 
-	cv::Point2d disparity_center(detection_center.x,
-			 detection_center.y+40);
 
-	float disp_val = average_disparity(d_image, detection_center, 30, 50);
+	int disparity_y_offset = 15;
+	int disparity_width = 30;
+	int disparity_height = 40;
+
+	cv::Point2d disparity_center(detection_center.x,
+			 detection_center.y+disparity_y_offset);
+
+	float disp_val = average_disparity(d_image, disparity_center, disparity_width, disparity_height);
 	if(disp_val<0){
           ROS_WARN("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
-	  /*cv::ellipse(l_mat, detection_center,
+	  cv::ellipse(l_feedback_image, detection_center,
 		      cv::Size(detection.width / 2, detection.height / 2),
-		      0, 0, 360, cv::Scalar(0, 0, 255), 2, 8, 0);*/
+		      0, 0, 360, cv::Scalar(0, 0, 255), 2, 8, 0);
+	  cv::rectangle(d_feedback_image,
+			cv::Point(disparity_center.x - disparity_width / 2,
+				  disparity_center.y - disparity_height / 2),
+			cv::Point(disparity_center.x + disparity_width / 2,
+				  disparity_center.y + disparity_height / 2),
+			cv::Scalar(0, 0, 255), 2);
 	  continue;
 	}
 
-	/*cv::ellipse(l_mat, detection_center,
+	cv::ellipse(l_feedback_image, detection_center,
 		    cv::Size(detection.width / 2, detection.height / 2),
 		    0, 0, 360, cv::Scalar(255, 0, 0), 2, 8, 0);
 
-	cv::rectangle(disparity_color,
-		      cv::Point(detection_center.x - 30 / 2,
-                                detection_center.y - 50 / 2),
-		      cv::Point(detection_center.x + 30 / 2,
-                                detection_center.y + 50 / 2),
-				cv::Scalar(255, 0, 0), 2);*/
+	cv::rectangle(d_feedback_image,
+		      cv::Point(disparity_center.x - disparity_width / 2,
+                                disparity_center.y - disparity_height / 2),
+		      cv::Point(disparity_center.x + disparity_width / 2,
+                                disparity_center.y + disparity_height / 2),
+				cv::Scalar(255, 0, 0), 2);
+	cv::rectangle(l_feedback_image,
+		      cv::Point(disparity_center.x - disparity_width / 2,
+                                disparity_center.y - disparity_height / 2),
+		      cv::Point(disparity_center.x + disparity_width / 2,
+                                disparity_center.y + disparity_height / 2),
+				cv::Scalar(255, 0, 0), 1);
 
 
 	cv::Point3d projected_position;
@@ -238,19 +277,6 @@ namespace vision{
 
     }
     ros::Time publish_start = ros::Time::now();
-
-    /*cv_bridge::CvImage disparity_msg;
-    disparity_msg.header.stamp   = time;
-    disparity_msg.header.frame_id   = l_camera_frame;
-    disparity_msg.encoding = sensor_msgs::image_encodings::BGR8;
-    disparity_msg.image    = disparity_color;
-    object_detection_disparity_pub_.publish(disparity_msg.toImageMsg());
-    cv_bridge::CvImage image_msg;
-    image_msg.header.stamp   = time;
-    image_msg.header.frame_id   = l_camera_frame;
-    image_msg.encoding = sensor_msgs::image_encodings::BGR8;
-    image_msg.image    = l_mat;
-    object_detection_image_pub_.publish(image_msg.toImageMsg());*/
 
     if(show_windows_){
       static boost::mutex display_mutex;
