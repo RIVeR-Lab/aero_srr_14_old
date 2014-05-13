@@ -37,13 +37,18 @@ using namespace stereo_msgs;
 using namespace message_filters::sync_policies;
 using namespace boost;
 
-class CascadeClassifier{
 
-  typedef ExactTime<Image, DisparityImage> ImageSyncPolicy;
+
+class CascadeClassifier{
+#ifdef USE_GPU
+  typedef cv::gpu::GpuMat InternalMat;
+#else
+  typedef cv::Mat InternalMat;
+#endif
+
+  typedef ApproximateTime<Image, Image, CameraInfo, CameraInfo> ImageSyncPolicy;
   typedef message_filters::Synchronizer<ImageSyncPolicy> ImageSynchronizer;
 
-  typedef ApproximateTime<CameraInfo, CameraInfo> InfoSyncPolicy;
-  typedef message_filters::Synchronizer<InfoSyncPolicy> InfoSynchronizer;
  public:
   CascadeClassifier(ros::NodeHandle nh, ros::NodeHandle pnh);
   ~CascadeClassifier();
@@ -51,27 +56,27 @@ class CascadeClassifier{
  private:
   image_transport::ImageTransport it_;
   image_transport::SubscriberFilter sub_l_image_;
-  message_filters::Subscriber<DisparityImage> sub_d_image_;
-  shared_ptr<ImageSynchronizer> image_synchronizer_;
-
+  image_transport::SubscriberFilter sub_r_image_;
   message_filters::Subscriber<CameraInfo> sub_l_info_;
   message_filters::Subscriber<CameraInfo> sub_r_info_;
-  shared_ptr<InfoSynchronizer> info_synchronizer_;
+  shared_ptr<ImageSynchronizer> image_synchronizer_;
 
-  boost::mutex stereo_model_mutex_;
-  bool stereo_model_init_;
   image_geometry::StereoCameraModel stereo_model_;
 
   tf::TransformListener tf_listener_;
 
-  ros::Publisher object_location_pub_;
-  image_transport::Publisher disparity_pub_;
-  image_transport::Publisher image_pub_;
+  ros::Publisher disparity_pub_;
+
+  ros::Publisher object_detection_pub_;
+  image_transport::Publisher object_detection_disparity_pub_;
+  image_transport::Publisher object_detection_image_pub_;
 
 #ifdef USE_GPU
   cv::gpu::CascadeClassifier_GPU cascade_classifier_;
+  cv::gpu::StereoBM_GPU block_matcher_;
 #else
   cv::CascadeClassifier cascade_classifier_;
+  cv::StereoBM block_matcher_;
 #endif
 
   bool show_windows_;
@@ -84,12 +89,14 @@ class CascadeClassifier{
 
 
   void imageCb(const ImageConstPtr& l_image_msg,
-	       const DisparityImageConstPtr& d_image_msg);
+	       const ImageConstPtr& r_image_msg,
+	       const CameraInfoConstPtr& l_info_msg,
+	       const CameraInfoConstPtr& r_info_msg);
 
-  void infoCb(const CameraInfoConstPtr& l_info_msg,
-	      const CameraInfoConstPtr& r_info_msg);
 
-  void detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, cv::Mat& l_mat, cv::Mat& d_image);
+  void compute_disparity(const InternalMat& left, const InternalMat& right, const InternalMat& depth, std_msgs::Header header, int width, int height);
+
+  void detect_and_publish(const std::string& l_camera_frame, const ros::Time& time, const InternalMat& l_image, const InternalMat& d_image);
   float average_disparity(const cv::Mat& disp, const cv::Point2d& pt, int width, int height);
 };
 
