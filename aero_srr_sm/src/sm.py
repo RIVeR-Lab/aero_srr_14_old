@@ -8,14 +8,15 @@ from pprint import pprint
 from actionlib import *
 from actionlib.msg import *
 from std_msgs.msg import *
+from nav_msgs.msg import *
 from geometry_msgs.msg import *
 from move_base_msgs.msg import *
-from vision.msg import *
 import math
 import tf2_ros
 import tf
 
 from fake_state import *
+from simple_publisher_state import *
 from detection_pickup_state import *
 from detection_drive_state import *
 from move_state_util import *
@@ -71,15 +72,19 @@ def main():
                                             'preempted':'failed'})
 
         smach.StateMachine.add('WAIT_FOR_START', FakeState(),
-                               transitions={'succeeded':'LEAVE_PLATFORM',
+                               transitions={'succeeded':'SHUTTER_LASER',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
+        smach.StateMachine.add('SHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True)),
+                               transitions={'succeeded':'LEAVE_PLATFORM'})
         smach.StateMachine.add('LEAVE_PLATFORM',
                                create_move_state(2, 0, 0),
-                               transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
+                               transitions={'succeeded':'UNSHUTTER_LASER',
                                             'aborted':'failed',
                                             'preempted':'failed'})
+        smach.StateMachine.add('UNSHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(False)),
+                               transitions={'succeeded':'MOVE_TOWARDS_PRECACHE'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
                                create_move_state(3, 0, 0),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
@@ -94,7 +99,7 @@ def main():
                                                     outcome_cb=out_cb)
         with drive_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']))
+                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']))
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
                                transitions={'succeeded':'A',
@@ -105,7 +110,7 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('B',
-                              smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                              smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']),
                                transitions={'invalid':'NAV_TO_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})
@@ -116,7 +121,7 @@ def main():
                                             'preempted':'failed'})
         
         smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV',
-                              smach_ros.MonitorState("/aero/lower_stereo/object_detection", ObjectLocationMsg, monitor_cb, output_keys = ['detection_msg']),
+                              smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']),
                                transitions={'invalid':'PICKUP_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})
