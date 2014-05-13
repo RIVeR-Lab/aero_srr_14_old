@@ -30,7 +30,7 @@ using namespace boost;
 
 class CascadeClassifier{
 
-  typedef ExactTime<Image, DisparityImage> ImageSyncPolicy;
+  typedef ApproximateTime<Image, DisparityImage> ImageSyncPolicy;
   typedef message_filters::Synchronizer<ImageSyncPolicy> ImageSynchronizer;
 
   typedef ApproximateTime<CameraInfo, CameraInfo> InfoSyncPolicy;
@@ -68,6 +68,7 @@ class CascadeClassifier{
   int min_neighbors_;
   cv::Size min_size_;
   cv::Size max_size_;
+  double object_radius_;
 
 
   void imageCb(const ImageConstPtr& l_image_msg,

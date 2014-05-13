@@ -11,6 +11,7 @@ namespace vision{
     min_size_ = cv::Size(50, 50);
     max_size_ = cv::Size(150, 150);
     robot_frame_ = "aero/base_footprint";
+    object_radius_ = 0.03;
 
     std::string cascade_path = "/home/aero/srr/src/aero_srr_14/vision/cascadeTraining4bHookdata/cascade.xml";
 
@@ -131,7 +132,7 @@ namespace vision{
 
 	cv::Point3d projected_position;
 	stereo_model_.projectDisparityTo3d(detection_center, disp_val, projected_position);
-
+	projected_position.z += object_radius_;
 
 	tf::Point position_tf(projected_position.x, projected_position.y, projected_position.z);
 
