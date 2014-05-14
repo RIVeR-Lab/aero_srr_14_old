@@ -71,8 +71,8 @@ class SpiralSearchServer:
             angle = angle + goal.angle_increment
         self.server.set_preempted()
         
-    def preempt_cb(self, goal):
-        self.server.cancel_goal()
+    def preempt_cb(self):
+        self.move_base_client.cancel_goal()
 
             
             
