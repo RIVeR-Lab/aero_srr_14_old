@@ -11,6 +11,8 @@ from std_msgs.msg import *
 from geometry_msgs.msg import *
 from nav_msgs.msg import *
 from move_base_msgs.msg import *
+import moveit_commander
+import moveit_msgs.msg
 import math
 import tf2_ros
 import tf
@@ -52,7 +54,11 @@ def monitor_cb(ud, msg):
     
 # main
 def main():
+    moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('arm_test_sm')
+
+    robot = moveit_commander.RobotCommander()
+    jaco_group = moveit_commander.MoveGroupCommander("jaco")
 
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['succeeded', 'failed'])
@@ -78,7 +84,7 @@ def main():
                                transitions={'succeeded':'DETECTION_PICKUP',
                                             'failed':'failed'})
 
-        smach.StateMachine.add('DETECTION_PICKUP', DetectionPickupState(),
+        smach.StateMachine.add('DETECTION_PICKUP', DetectionPickupState(robot, jaco_group),
                                transitions={'succeeded':'succeeded',
                                             'aborted':'failed',
                                             'preempted':'failed'})
@@ -92,6 +98,8 @@ def main():
 
     #rospy.spin()
     sis.stop()
+
+    moveit_commander.roscpp_shutdown()
 
 
 if __name__ == '__main__':

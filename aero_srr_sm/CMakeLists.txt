@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   jaco_msgs
   vision
+  moveit_commander
+  moveit_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -88,7 +90,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES aero_srr_sm
-#  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs rospy smach smach_ros tf2 jaco_msgs
+#  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs rospy smach smach_ros tf2 jaco_msgs moveit_commander moveit_msgs
+
 #  DEPENDS system_lib
 )
 
