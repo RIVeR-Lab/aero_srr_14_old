@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="beacon_detector" type="beacon_detector_node" respawn="true" name="beacon_detector" output="screen" ns="aero">
+  <node pkg="beacon_detector" type="beacon_detector_node" respawn="true" name="beacon_detector" output="screen" ns="aero/upper_stereo">
     <rosparam param="tag_locations">[
       {id: 8, x: -0.33655, y: 0.0, z: .322263, roll: -1.57, pitch: 1.57, yaw: 1.57},
       {id: 105, x: 0.33655, y: 0.0, z: 0.322263, roll: -1.57, pitch: -1.57, yaw: -1.57},
@@ -11,18 +11,59 @@
       {id: 222, x: -0.168275, y: -0.1611315, z: 0.644525, roll: 0.0, pitch: 0.0, yaw: 3.14}]
     </rosparam>
   </node>
-  <node pkg="apriltags_ros" type="apriltag_detector_node" respawn="true" name="apriltag_detector" output="screen" ns="aero">
-    <remap from="image" to="lower_stereo/left/image_rect"/>
+  <node pkg="apriltags_ros" type="apriltag_detector_node" respawn="true" name="apriltag_detector" output="screen" ns="aero/upper_stereo">
+    <remap from="image" to="left/image_rect"/>
     <rosparam param="tag_descriptions">[
+      {id:   8, size: 0.5588},
+      {id: 105, size: 0.5588},
       {id: 400, size: 0.2667},
       {id: 300, size: 0.2667},
       {id: 444, size: 0.2667},
       {id: 555, size: 0.2667},
       {id: 333, size: 0.2667},
-      {id: 222, size: 0.2667},
-      {id:   8, size: 0.5588},
-      {id: 105, size: 0.5588}]
+      {id: 222, size: 0.2667}]
     </rosparam>
-    <param name="sensor_frame_id" value="aero/lower_stereo/left_camera_optical_frame"/>
   </node>
+
+  <node pkg="robot_localization" type="ekf_localization_node" name="beacon_ekf" ns="aero/upper_stereo" output="screen">
+    <param name="pose0" value="beacon_estimate/tag_8"/>
+    <rosparam param="pose0_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose0_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose1" value="beacon_estimate/tag_105"/>
+    <rosparam param="pose1_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose1_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose2" value="beacon_estimate/tag_400"/>
+    <rosparam param="pose2_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose2_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose3" value="beacon_estimate/tag_300"/>
+    <rosparam param="pose3_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose3_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose4" value="beacon_estimate/tag_444"/>
+    <rosparam param="pose4_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose4_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose5" value="beacon_estimate/tag_555"/>
+    <rosparam param="pose5_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose5_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose6" value="beacon_estimate/tag_333"/>
+    <rosparam param="pose6_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose6_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="pose7" value="beacon_estimate/tag_222"/>
+    <rosparam param="pose7_config">[true, true, true, true, true, true, false, false, false, false, false, false]</rosparam>
+    <rosparam param="pose7_differential">[false, false, false, false, false, false]</rosparam>
+
+    <param name="odom_frame" value="aero/odom"/>
+    <param name="base_link_frame" value="aero/beacon_detection"/>
+    <remap from="odometry/filtered" to="beacon_estimate/filtered"/>
+  </node>
+
+  <node pkg="beacon_detector" type="beacon_transform_updater_node" name="beacon_transform_updater" ns="aero/upper_stereo" output="screen">
+  </node>
+
 </launch>
