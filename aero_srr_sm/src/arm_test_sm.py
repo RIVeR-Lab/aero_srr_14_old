@@ -19,6 +19,7 @@ from fake_state import *
 from detection_pickup_state import *
 from move_state_util import *
 from arm_state_util import *
+from detection_state_util import *
 
 
 def child_term_cb(outcome_map):
@@ -45,10 +46,6 @@ def out_cb(outcome_map):
     else:
         return 'failed'
     
-def monitor_cb(ud, msg):
-    print msg
-    ud['detection_msg'] = msg
-    return False
     
 # main
 def main():
@@ -71,8 +68,7 @@ def main():
                                             child_termination_cb=child_term_cb,
                                             outcome_cb=out_cb)
         with wait_detect_concurrence:
-                smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']))
+                smach.Concurrence.add('WAIT_FOR_DETECTION', create_detect_state())
                 #smach.Concurrence.add('WAIT_DETECT_FAKE', FakeState())
         smach.StateMachine.add('WAIT_DETECT', wait_detect_concurrence,
                                transitions={'succeeded':'DETECTION_PICKUP',

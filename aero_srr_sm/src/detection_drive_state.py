@@ -18,18 +18,18 @@ class DetectionDriveState(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing nav to detection state')
-        print('Got detection ', str(userdata['detection_msg']) )
+        #print('Got detection ', str(userdata['detection_msg']) )
 
         self.client.wait_for_server()
 
-        object_location = userdata['detection_msg'].pose;
-        print('Got location ', str(object_location) )
+        object_location = userdata['detection_msg'];
 
         try:
             self.tf_listener.waitForTransform('aero/base_footprint', object_location.header.frame_id, object_location.header.stamp, rospy.Duration(1))
         
             object_location_base = self.tf_listener.transformPose('aero/base_footprint', object_location)
             object_position = object_location_base.pose.position
+            print('Got location ', str(object_position) )
 
             goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x-0.75, object_position.y-0.2, 0);
             self.client.send_goal(goal)

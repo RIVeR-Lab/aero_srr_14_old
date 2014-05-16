@@ -19,28 +19,32 @@ class DetectionPickupState(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing pickup state')
-        print('Got detection ', str(userdata['detection_msg']) )
+        #print('Got detection ', str(userdata['detection_msg']) )
 
         self.client.wait_for_server()
         rospy.wait_for_service('/aero/jaco/home_arm')
 
-        object_location = PoseStamped()
-        object_location.pose = userdata['detection_msg'].pose.pose;
-        object_location.header = userdata['detection_msg'].header;
-        print('Got location ', str(object_location) )
+        object_location = userdata['detection_msg']
 
         try:
             self.tf_listener.waitForTransform('jaco_api_origin', object_location.header.frame_id, object_location.header.stamp, rospy.Duration(1))
         
             object_location_api = self.tf_listener.transformPose('jaco_api_origin', object_location)
             object_position = object_location_api.pose.position
+            print('Got location ', str(object_position) )
 
+            if object_position.x > 0.55:
+              grasp_angle = math.pi/4
+            else:
+              grasp_angle = 0
+            aproach_dist = 0.1
+            grasp_through_dist = 0.04
             trajectory = [create_arm_api_pose(0.5, -0.2, 0.4, -math.pi/2, math.pi/2, 0),
                             create_arm_api_pose(object_position.x, object_position.y-0.1, 0.4, -math.pi/2, math.pi/4, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y-0.1, object_position.z+0.1, -math.pi/2, 0, 0), 1, 1, 1),
-                            create_arm_api_pose(object_position.x, object_position.y+0.04, object_position.z+0.1, -math.pi/2, 0, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x, object_position.y+0.04, object_position.z+0.1, -math.pi/2, 0, 0), 60, 60, 60),
-                            create_arm_api_pose(object_position.x, object_position.y+0.04, object_position.z+0.2, -math.pi/2, 0, 0),
+                            create_arm_fingers(create_arm_api_pose(object_position.x-aproach_dist*math.sin(grasp_angle), object_position.y-aproach_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0), 1, 1, 1),
+                            create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0),
+                            create_arm_fingers(create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0), 60, 60, 60),
+                            create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.2, -math.pi/2, grasp_angle, 0),
                             create_arm_api_pose(0.4, 0.2, 0.4, -math.pi/2, 0, 0),
                             create_arm_api_pose(-0.2, 0.5, 0.4, -math.pi/2, -math.pi/2, 0),
                             create_arm_api_pose(-0.3, 0.1, 0.4, -math.pi/2, -math.pi*3/5, 0),

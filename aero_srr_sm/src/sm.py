@@ -21,6 +21,7 @@ from detection_pickup_state import *
 from detection_drive_state import *
 from move_state_util import *
 from arm_state_util import *
+from detection_state_util import *
 
 
 def child_term_cb(outcome_map):
@@ -47,13 +48,6 @@ def out_cb(outcome_map):
     else:
         return 'failed'
     
-def monitor_cb(ud, msg):
-    ud['detection_msg'] = msg
-    return math.isnan(msg.pose.pose.position.y)
-
-
-
-
 # main
 def main():
     rospy.init_node('aero_srr_sm')
@@ -98,8 +92,7 @@ def main():
                                                     child_termination_cb=child_term_cb,
                                                     outcome_cb=out_cb)
         with drive_detect_concurrence:
-                smach.Concurrence.add('WAIT_FOR_DETECTION',
-                                      smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']))
+                smach.Concurrence.add('WAIT_FOR_DETECTION', create_detect_state())
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
                                transitions={'succeeded':'A',
@@ -109,8 +102,7 @@ def main():
                                transitions={'succeeded':'B',
                                             'aborted':'failed',
                                             'preempted':'failed'})
-        smach.StateMachine.add('B',
-                              smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']),
+        smach.StateMachine.add('B', create_detect_state(),
                                transitions={'invalid':'NAV_TO_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})
@@ -120,30 +112,30 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
         
-        smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV',
-                              smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']),
+        smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV', create_detect_state(),
                                transitions={'invalid':'PICKUP_PRECACHE',
-
+                                            'valid':'failed',
                                             'preempted':'failed'})
         #smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
         #                       transitions={'succeeded':'NAV_TO_PLATFORM',
         #                                    'aborted':'failed',
         #                                    'preempted':'failed'})
         smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
-                               transitions={'succeeded':'NAV_TO_PLATFORM',
+                               transitions={'succeeded':'succeeded',
+##                               transitions={'succeeded':'NAV_TO_PLATFORM',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('NAV_TO_PLATFORM',
-                               create_move_state(2, 0, 0),
-                               transitions={'succeeded':'NAV_ONTO_PLATFORM',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-        smach.StateMachine.add('NAV_ONTO_PLATFORM',
-                               create_move_state(0, 0, 0),
-                               transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
+        #smach.StateMachine.add('NAV_TO_PLATFORM',
+        #                       create_move_state(2, 0, 0),
+        #                       transitions={'succeeded':'NAV_ONTO_PLATFORM',
+        #                                    'aborted':'failed',
+        #                                    'preempted':'failed'})
+        #smach.StateMachine.add('NAV_ONTO_PLATFORM',
+        #                       create_move_state(0, 0, 0),
+        #                       transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
+        #                                    'aborted':'failed',
+        #                                    'preempted':'failed'})
 
     sis = smach_ros.IntrospectionServer('aero_srr_sm', sm, '/SM_ROOT')
     sis.start()
