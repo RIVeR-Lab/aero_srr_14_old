@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>aero_srr_sm</name>
+  <name>srr_carrot_planner</name>
   <version>0.0.0</version>
-  <description>The aero_srr_sm package</description>
+  <description>The srr_carrot_planner package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/aero_srr_sm</url> -->
+  <!-- <url type="website">http://wiki.ros.org/srr_carrot_planner</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -42,22 +42,12 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>move_base_msgs</build_depend>
-  <build_depend>nav_msgs</build_depend>
   <build_depend>rospy</build_depend>
-  <build_depend>smach</build_depend>
-  <build_depend>smach_ros</build_depend>
-  <build_depend>tf2</build_depend>
-  <build_depend>jaco_msgs</build_depend>
-  <build_depend>srr_search</build_depend>
+  <build_depend>tf</build_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>move_base_msgs</run_depend>
-  <run_depend>nav_msgs</run_depend>
   <run_depend>rospy</run_depend>
-  <run_depend>smach</run_depend>
-  <run_depend>smach_ros</run_depend>
-  <run_depend>tf2</run_depend>
-  <run_depend>jaco_msgs</run_depend>
-  <run_depend>srr_search</run_depend>
+  <run_depend>tf</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

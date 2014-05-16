@@ -1,0 +1,7 @@
+geometry_msgs/PoseStamped center
+float32 search_radius
+float32 start_radius
+float32 circle_separation
+float32 angle_increment
+---
+---
