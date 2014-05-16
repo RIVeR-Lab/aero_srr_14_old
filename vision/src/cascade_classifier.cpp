@@ -28,7 +28,7 @@ namespace vision{
 
 
 
-    image_synchronizer_.reset(new ImageSynchronizer(ImageSyncPolicy(6), sub_l_image_, sub_d_image_));
+    image_synchronizer_.reset(new ImageSynchronizer(ImageSyncPolicy(10), sub_l_image_, sub_d_image_));
     image_synchronizer_->registerCallback(boost::bind(&CascadeClassifier::imageCb,
 					    this, _1, _2));
 
@@ -41,7 +41,7 @@ namespace vision{
     image_pub_ = it_.advertise("object_detection/image", 1);
 
     image_transport::TransportHints hints("raw", ros::TransportHints(), pnh);
-    sub_l_image_.subscribe(it_, "left/image_raw", 1, hints);
+    sub_l_image_.subscribe(it_, "left/image_rect", 1, hints);
     sub_d_image_.subscribe(nh, "disparity", 1);
 
     sub_l_info_.subscribe(nh, "left/camera_info", 1);
