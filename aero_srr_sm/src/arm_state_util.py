@@ -51,3 +51,6 @@ def create_arm_trajectory_state(trajectory):
     goal=TrajectoryGoal(trajectory);
     return smach_ros.SimpleActionState('/aero/jaco/arm_trajectory', TrajectoryAction, goal)
 
+def create_arm_stow_state():
+    trajectory = [create_arm_api_pose(-0.4, -0.3, 0.5, math.pi/2, -math.pi/2, 0)]
+    return create_arm_trajectory_state(trajectory)
