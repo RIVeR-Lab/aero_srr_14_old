@@ -123,7 +123,7 @@ def main():
         smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV',
                               smach_ros.MonitorState("/aero/lower_stereo/object_detection/filtered", Odometry, monitor_cb, output_keys = ['detection_msg']),
                                transitions={'invalid':'PICKUP_PRECACHE',
-                                            'valid':'failed',
+
                                             'preempted':'failed'})
         #smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
         #                       transitions={'succeeded':'NAV_TO_PLATFORM',

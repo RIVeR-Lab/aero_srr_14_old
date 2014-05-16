@@ -132,7 +132,7 @@ namespace vision{
 	cv::Point2d disparity_center(detection_center.x,
 			 detection_center.y+40);
 
-	float disp_val = average_disparity(d_image, detection_center, 30, 50);
+	float disp_val = average_disparity(d_image, detection_center, 20, 40);
 	if(disp_val<0){
           ROS_WARN("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
 	  cv::ellipse(l_mat, detection_center,
@@ -146,10 +146,10 @@ namespace vision{
 		    0, 0, 360, cv::Scalar(255, 0, 0), 2, 8, 0);
 
 	cv::rectangle(disparity_color,
-		      cv::Point(detection_center.x - 30 / 2,
-                                detection_center.y - 50 / 2),
-		      cv::Point(detection_center.x + 30 / 2,
-                                detection_center.y + 50 / 2),
+		      cv::Point(detection_center.x - 20 / 2,
+                                detection_center.y - 40 / 2),
+		      cv::Point(detection_center.x + 20 / 2,
+                                detection_center.y + 40 / 2),
 		      cv::Scalar(255, 0, 0), 2);
 
 
