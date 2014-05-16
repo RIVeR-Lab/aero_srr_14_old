@@ -13,10 +13,18 @@ import tf2_ros
 import tf
 
 
-def create_arm_pose(frame, x, y, z, roll, pitch, yaw):
+def create_arm_pose_from_pose_stamped(pose):
+    return TrajectoryPoint(
+        position_type = TrajectoryPoint.POSITION_TYPE_CARTESIAN_POSITION,
+        position = pose,
+        hand_mode = TrajectoryPoint.HAND_MODE_NO_MOVE
+        )
+def create_arm_api_pose(x, y, z, roll, pitch, yaw):
+    return create_arm_pose('jaco_api_origin', rospy.get_rostime(), x, y, z, roll, pitch, yaw)
+def create_arm_pose(frame, stamp, x, y, z, roll, pitch, yaw):
     angle = tf.transformations.quaternion_from_euler(roll, pitch, yaw);
     pose = PoseStamped(
-        header = Header(frame_id=frame),
+        header = Header(frame_id=frame, stamp=stamp),
         pose   = Pose(
             position = Point(x = x, y = y, z = z),
             orientation = Quaternion(x = angle[0],
@@ -25,11 +33,8 @@ def create_arm_pose(frame, x, y, z, roll, pitch, yaw):
                                      w = angle[3]),
             )
     );
-    return TrajectoryPoint(
-        position_type = TrajectoryPoint.POSITION_TYPE_CARTESIAN_POSITION,
-        position = pose,
-        hand_mode = TrajectoryPoint.HAND_MODE_NO_MOVE
-        )
+    return create_arm_pose_from_pose_stamped(pose)
+
 def create_arm_delay(delay):
     return TrajectoryPoint(
         position_type = TrajectoryPoint.POSITION_TYPE_TIME_DELAY,

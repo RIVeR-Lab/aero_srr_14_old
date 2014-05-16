@@ -1,24 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(aero_srr_sm)
+project(vision)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  move_base_msgs
-  nav_msgs
-  rospy
-  smach
-  smach_ros
-  tf2
-  jaco_msgs
-  srr_search
-  vision
-)
+find_package(catkin REQUIRED image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf message_generation std_msgs robot_localization)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -52,8 +42,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 # add_message_files(
-#   FILES
-#   Message1.msg
+#	FILES
+#  ObjectLocationMsg.msg
 #   Message2.msg
 # )
 
@@ -74,7 +64,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   move_base_msgs#   nav_msgs
+#   std_msgs
+#   geometry_msgs  # Or other packages containing msgs
 # )
 
 ###################################
@@ -87,10 +78,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES aero_srr_sm
-#  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs rospy smach smach_ros tf2 jaco_msgs srr_search
-#  DEPENDS system_lib
+ INCLUDE_DIRS include
+#  LIBRARIES vision
+  CATKIN_DEPENDS image_transport nodelet roscpp cv_bridge image_geometry stereo_msgs message_filters geometry_msgs tf std_msgs robot_localization
+#  DEPENDS OpenCV image_transport nodelet roscpp
 )
 
 ###########
@@ -100,26 +91,34 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
+# TODO: Check names of system library include directories (OpenCV, image_transport, nodelet, roscpp)
+include_directories(include
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a cpp library
-# add_library(aero_srr_sm
-#   src/${PROJECT_NAME}/aero_srr_sm.cpp
-# )
-
 ## Declare a cpp executable
-# add_executable(aero_srr_sm_node src/aero_srr_sm_node.cpp)
+add_executable(image src/staticImagePub.cpp)
+target_link_libraries(image ${catkin_LIBRARIES})
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(aero_srr_sm_node aero_srr_sm_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(aero_srr_sm_node
-#   ${catkin_LIBRARIES}
-# )
+
+add_library(cascade_classifier src/cascade_classifier.cpp)
+target_link_libraries(cascade_classifier ${catkin_LIBRARIES})
+
+add_library(cascade_classifier_nodelet src/cascade_classifier_nodelet.cpp)
+target_link_libraries(cascade_classifier_nodelet cascade_classifier ${catkin_LIBRARIES})
+
+add_executable(cascade_classifier_node src/cascade_classifier_node.cpp)
+target_link_libraries(cascade_classifier_node cascade_classifier ${catkin_LIBRARIES})
+
+add_executable(zero_twist_publisher src/zero_twist_publisher.cpp)
+target_link_libraries(zero_twist_publisher ${catkin_LIBRARIES})
+
+
 
 #############
 ## Install ##
@@ -136,7 +135,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS aero_srr_sm aero_srr_sm_node
+# install(TARGETS vision vision_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -161,7 +160,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_aero_srr_sm.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_vision.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
