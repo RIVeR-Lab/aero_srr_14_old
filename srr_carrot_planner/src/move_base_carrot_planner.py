@@ -14,7 +14,7 @@ from std_msgs.msg import *
 
 class MoveBaseCarrotPlannerServer:
     def __init__(self):
-        self.dist_inc = rospy.get_param('max_carrot_distance', 0.3)
+        self.dist_inc = rospy.get_param('~max_carrot_distance', 0.3)
         
         self.move_base_client = actionlib.SimpleActionClient('move_base_raw', MoveBaseAction)
         self.move_base_client.wait_for_server()

@@ -58,16 +58,6 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('INIT', FakeState(),
-                               transitions={'succeeded':'STOW_ARM',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-
-        smach.StateMachine.add('STOW_ARM', create_arm_stow_state(),
-                               transitions={'succeeded':'BEFORE_DETECT',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-
-        smach.StateMachine.add('BEFORE_DETECT', FakeState(),
                                transitions={'succeeded':'WAIT_DETECT',
                                             'aborted':'failed',
                                             'preempted':'failed'})

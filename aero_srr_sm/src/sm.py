@@ -103,11 +103,21 @@ def main():
                                             'aborted':'failed',
                                             'preempted':'failed'})
         smach.StateMachine.add('B', create_detect_state(),
+                               transitions={'invalid':'NAV_NEAR_PRECACHE',
+                                            'valid':'failed',
+                                            'preempted':'failed'})
+
+        smach.StateMachine.add('NAV_NEAR_PRECACHE', DetectionDriveState(-1.5, -0.2),
+                               transitions={'succeeded':'DETECT_WHEN_NEAR',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
+
+        smach.StateMachine.add('DETECT_WHEN_NEAR', create_detect_state(),
                                transitions={'invalid':'NAV_TO_PRECACHE',
                                             'valid':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('NAV_TO_PRECACHE', DetectionDriveState(),
+        smach.StateMachine.add('NAV_TO_PRECACHE', DetectionDriveState(-0.7, -0.2),
                                transitions={'succeeded':'WAIT_FOR_DETECTION_AFTER_NAV',
                                             'aborted':'failed',
                                             'preempted':'failed'})

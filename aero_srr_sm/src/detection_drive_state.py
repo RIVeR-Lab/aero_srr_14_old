@@ -9,10 +9,12 @@ from move_base_msgs.msg import *
 import tf
 
 class DetectionDriveState(smach.State):
-    def __init__(self):
+    def __init__(self, dist_out, dist_lat):
         smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'], input_keys=['detection_msg'])
         self.client = actionlib.SimpleActionClient('/aero/move_base', MoveBaseAction)
         self.tf_listener = tf.TransformListener()
+        self.dist_out = dist_out
+        self.dist_lat = dist_lat
         
             
 
@@ -31,7 +33,7 @@ class DetectionDriveState(smach.State):
             object_position = object_location_base.pose.position
             print('Got location ', str(object_position) )
 
-            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x-0.9, object_position.y-0.2, 0);
+            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x+self.dist_out-0.63, object_position.y+self.dist_lat-0.2, 0);
             self.client.send_goal(goal)
 
             self.client.wait_for_result()
