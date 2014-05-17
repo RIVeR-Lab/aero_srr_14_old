@@ -33,7 +33,7 @@ class DetectionDriveState(smach.State):
             object_position = object_location_base.pose.position
             print('Got location ', str(object_position) )
 
-            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x+self.dist_out-0.63, object_position.y+self.dist_lat-0.2, 0);
+            goal=create_move_goal('aero/base_footprint', object_location_base.header.stamp, object_position.x+self.dist_out, object_position.y+self.dist_lat, 0);
             self.client.send_goal(goal)
 
             self.client.wait_for_result()

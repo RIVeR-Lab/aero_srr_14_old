@@ -60,18 +60,24 @@ def main():
         # Add states to the container
         smach.StateMachine.add('WAIT_FOR_IMU',
                                smach_ros.MonitorState("/aero/imu/is_calibrated", Bool, lambda ud, msg: not msg.data),
-        #becomes invalid when callback is false
-                               transitions={'invalid':'WAIT_FOR_START',
+#        #becomes invalid when callback is false
+                               transitions={'invalid':'SHUTTER_LASER',
                                             'valid':'failed',
                                             'preempted':'failed'})
 
+        smach.StateMachine.add('SHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True)),
+                               transitions={'succeeded':'WAIT_FOR_START'})
+
         smach.StateMachine.add('WAIT_FOR_START', FakeState(),
-                               transitions={'succeeded':'SHUTTER_LASER',
+                               transitions={'succeeded':'STOW_ARM',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('SHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True)),
-                               transitions={'succeeded':'LEAVE_PLATFORM'})
+        smach.StateMachine.add('STOW_ARM', ArmStowState(),
+                               transitions={'succeeded':'LEAVE_PLATFORM',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
+
         smach.StateMachine.add('LEAVE_PLATFORM',
                                create_move_state(2, 0, 0),
                                transitions={'succeeded':'UNSHUTTER_LASER',
@@ -95,32 +101,35 @@ def main():
                 smach.Concurrence.add('WAIT_FOR_DETECTION', create_detect_state())
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
-                               transitions={'succeeded':'NAV_NEAR_PRECACHE',
+                               transitions={'succeeded':'CHECK_NEAR_PRECACHE',
                                             'failed':'failed'})
 
+
+        smach.StateMachine.add('WAIT_BEFORE_DETECT', DelayState(2.0),
+                               transitions={'succeeded':'DETECT',
+                                            'aborted':'failed'})
+
+        smach.StateMachine.add('DETECT', create_detect_state(),
+                               transitions={'invalid':'CHECK_NEAR_PRECACHE',
+                                            'valid':'failed',
+                                            'preempted':'failed'})
+
+        smach.StateMachine.add('CHECK_NEAR_PRECACHE', CheckNearPrecacheState(),
+                               transitions={'far':'NAV_NEAR_PRECACHE',
+                                            'near':'NAV_CLOSE_PRECACHE',
+                                            'close':'PICKUP_PRECACHE',
+                                            'aborted':'failed'})
+
         smach.StateMachine.add('NAV_NEAR_PRECACHE', DetectionDriveState(-1.5, -0.2),
-                               transitions={'succeeded':'DETECT_WHEN_NEAR',
+                               transitions={'succeeded':'WAIT_BEFORE_DETECT',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('DETECT_WHEN_NEAR', create_detect_state(),
-                               transitions={'invalid':'NAV_TO_PRECACHE',
-                                            'valid':'failed',
-                                            'preempted':'failed'})
-
-        smach.StateMachine.add('NAV_TO_PRECACHE', DetectionDriveState(-0.7, -0.2),
-                               transitions={'succeeded':'WAIT_FOR_DETECTION_AFTER_NAV',
+        smach.StateMachine.add('NAV_CLOSE_PRECACHE', DetectionDriveState(-0.7, -0.2),
+                               transitions={'succeeded':'WAIT_BEFORE_DETECT',
                                             'aborted':'failed',
                                             'preempted':'failed'})
-        
-        smach.StateMachine.add('WAIT_FOR_DETECTION_AFTER_NAV', create_detect_state(),
-                               transitions={'invalid':'PICKUP_PRECACHE',
-                                            'valid':'failed',
-                                            'preempted':'failed'})
-        #smach.StateMachine.add('PICKUP_PRECACHE', FakeState(),
-        #                       transitions={'succeeded':'NAV_TO_PLATFORM',
-        #                                    'aborted':'failed',
-        #                                    'preempted':'failed'})
+
         smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
                                transitions={'succeeded':'succeeded',
 ##                               transitions={'succeeded':'NAV_TO_PLATFORM',

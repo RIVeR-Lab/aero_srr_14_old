@@ -33,12 +33,17 @@ class DetectionPickupState(smach.State):
             object_position = object_location_api.pose.position
             print('Got location ', str(object_position) )
 
+
             if object_position.x > 0.55:
               grasp_angle = math.pi/4
             else:
               grasp_angle = 0
             aproach_dist = 0.1
             grasp_through_dist = 0.04
+
+            rospy.loginfo('Homing Arm')
+            self.home_client()
+
             trajectory = [create_arm_api_pose(0.5, -0.2, 0.4, -math.pi/2, math.pi/2, 0),
                             create_arm_api_pose(object_position.x, object_position.y-0.1, 0.4, -math.pi/2, math.pi/4, 0),
                             create_arm_fingers(create_arm_api_pose(object_position.x-aproach_dist*math.sin(grasp_angle), object_position.y-aproach_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0), 1, 1, 1),
