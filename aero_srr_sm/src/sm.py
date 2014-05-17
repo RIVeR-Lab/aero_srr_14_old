@@ -95,17 +95,8 @@ def main():
                 smach.Concurrence.add('WAIT_FOR_DETECTION', create_detect_state())
                 smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
-                               transitions={'succeeded':'A',
+                               transitions={'succeeded':'NAV_NEAR_PRECACHE',
                                             'failed':'failed'})
-
-        smach.StateMachine.add('A', FakeState(),
-                               transitions={'succeeded':'B',
-                                            'aborted':'failed',
-                                            'preempted':'failed'})
-        smach.StateMachine.add('B', create_detect_state(),
-                               transitions={'invalid':'NAV_NEAR_PRECACHE',
-                                            'valid':'failed',
-                                            'preempted':'failed'})
 
         smach.StateMachine.add('NAV_NEAR_PRECACHE', DetectionDriveState(-1.5, -0.2),
                                transitions={'succeeded':'DETECT_WHEN_NEAR',
