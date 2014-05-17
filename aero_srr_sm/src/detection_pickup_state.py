@@ -40,15 +40,16 @@ class DetectionPickupState(smach.State):
               grasp_angle = 0
             aproach_dist = 0.1
             grasp_through_dist = 0.04
+            vertical_offset = 0.11
 
             rospy.loginfo('Homing Arm')
             self.home_client()
 
             trajectory = [create_arm_api_pose(0.5, -0.2, 0.4, -math.pi/2, math.pi/2, 0),
                             create_arm_api_pose(object_position.x, object_position.y-0.1, 0.4, -math.pi/2, math.pi/4, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x-aproach_dist*math.sin(grasp_angle), object_position.y-aproach_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0), 1, 1, 1),
-                            create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0),
-                            create_arm_fingers(create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.1, -math.pi/2, grasp_angle, 0), 60, 60, 60),
+                            create_arm_fingers(create_arm_api_pose(object_position.x-aproach_dist*math.sin(grasp_angle), object_position.y-aproach_dist*math.cos(grasp_angle), object_position.z+vertical_offset, -math.pi/2, grasp_angle, 0), 1, 1, 1),
+                            create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+vertical_offset, -math.pi/2, grasp_angle, 0),
+                            create_arm_fingers(create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+vertical_offset, -math.pi/2, grasp_angle, 0), 60, 60, 60),
                             create_arm_api_pose(object_position.x+grasp_through_dist*math.sin(grasp_angle), object_position.y+grasp_through_dist*math.cos(grasp_angle), object_position.z+0.2, -math.pi/2, grasp_angle, 0),
                             create_arm_api_pose(0.4, 0.2, 0.4, -math.pi/2, 0, 0),
                             create_arm_api_pose(-0.2, 0.5, 0.4, -math.pi/2, -math.pi/2, 0),

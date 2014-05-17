@@ -11,6 +11,7 @@ from std_msgs.msg import *
 from nav_msgs.msg import *
 from geometry_msgs.msg import *
 from move_base_msgs.msg import *
+from srr_search.msg import *
 import math
 import tf2_ros
 import tf
@@ -65,7 +66,7 @@ def main():
                                             'valid':'failed',
                                             'preempted':'failed'})
 
-        smach.StateMachine.add('SHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True)),
+        smach.StateMachine.add('SHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True), True),
                                transitions={'succeeded':'WAIT_FOR_START'})
 
         smach.StateMachine.add('WAIT_FOR_START', FakeState(),
@@ -79,14 +80,14 @@ def main():
                                             'preempted':'failed'})
 
         smach.StateMachine.add('LEAVE_PLATFORM',
-                               create_move_state(2, 0, 0),
+                               create_move_state(4, 0, 0),
                                transitions={'succeeded':'UNSHUTTER_LASER',
                                             'aborted':'failed',
                                             'preempted':'failed'})
-        smach.StateMachine.add('UNSHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(False)),
+        smach.StateMachine.add('UNSHUTTER_LASER', SimplePublisherState('/aero/laser_shutter', Bool, Bool(False), True),
                                transitions={'succeeded':'MOVE_TOWARDS_PRECACHE'})
         smach.StateMachine.add('MOVE_TOWARDS_PRECACHE',
-                               create_move_state(3, 0, 0),
+                               create_move_state(25, 0, 0),
                                transitions={'succeeded':'SEARCH_FOR_PRECACHE',
                                             'aborted':'failed',
                                             'preempted':'failed'})
@@ -97,12 +98,18 @@ def main():
                                                     output_keys=['detection_msg'],
                                                     child_termination_cb=child_term_cb,
                                                     outcome_cb=out_cb)
+
+        spiral_goal = SpiralSearchGoal()
         with drive_detect_concurrence:
                 smach.Concurrence.add('WAIT_FOR_DETECTION', create_detect_state())
-                smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(10, 0, 0))
+                #smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_move_state(12, 0, 0))
+                smach.Concurrence.add('DRIVE_WHILE_DETECTING', create_spiral_search_state(25, 0, 0, 10, 2, 2, math.pi/3))
         smach.StateMachine.add('SEARCH_FOR_PRECACHE', drive_detect_concurrence,
-                               transitions={'succeeded':'CHECK_NEAR_PRECACHE',
+                               transitions={'succeeded':'SHUTTER_LASER_FOR_PICKUP',
                                             'failed':'failed'})
+
+        smach.StateMachine.add('SHUTTER_LASER_FOR_PICKUP', SimplePublisherState('/aero/laser_shutter', Bool, Bool(True), True, ['detection_msg']),
+                               transitions={'succeeded':'CHECK_NEAR_PRECACHE'})
 
 
         smach.StateMachine.add('WAIT_BEFORE_DETECT', DelayState(2.0),
@@ -131,21 +138,23 @@ def main():
                                             'preempted':'failed'})
 
         smach.StateMachine.add('PICKUP_PRECACHE', DetectionPickupState(),
-                               transitions={'succeeded':'succeeded',
-##                               transitions={'succeeded':'NAV_TO_PLATFORM',
+                               transitions={'succeeded':'UNSHUTTER_LASER_AFTER_PICKUP',
                                             'aborted':'failed',
                                             'preempted':'failed'})
 
-        #smach.StateMachine.add('NAV_TO_PLATFORM',
-        #                       create_move_state(2, 0, 0),
-        #                       transitions={'succeeded':'NAV_ONTO_PLATFORM',
-        #                                    'aborted':'failed',
-        #                                    'preempted':'failed'})
-        #smach.StateMachine.add('NAV_ONTO_PLATFORM',
-        #                       create_move_state(0, 0, 0),
-        #                       transitions={'succeeded':'MOVE_TOWARDS_PRECACHE',
-        #                                    'aborted':'failed',
-        #                                    'preempted':'failed'})
+        smach.StateMachine.add('UNSHUTTER_LASER_AFTER_PICKUP', SimplePublisherState('/aero/laser_shutter', Bool, Bool(False), True),
+                               transitions={'succeeded':'NAV_TO_PLATFORM'})
+
+        smach.StateMachine.add('NAV_TO_PLATFORM',
+                               create_move_state(4, 0, 0),
+                               transitions={'succeeded':'NAV_ONTO_PLATFORM',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
+        smach.StateMachine.add('NAV_ONTO_PLATFORM',
+                               create_move_state(0, 0, 0),
+                               transitions={'succeeded':'succeeded',
+                                            'aborted':'failed',
+                                            'preempted':'failed'})
 
     sis = smach_ros.IntrospectionServer('aero_srr_sm', sm, '/SM_ROOT')
     sis.start()
