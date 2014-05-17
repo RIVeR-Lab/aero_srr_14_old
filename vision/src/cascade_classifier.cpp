@@ -70,7 +70,7 @@ namespace vision{
 
   void CascadeClassifier::imageCb(const ImageConstPtr& l_image_msg,
 				  const DisparityImageConstPtr& d_image_msg){
-    ROS_INFO("Got Matching Image and Disparity delay=%fs", (ros::Time::now()-l_image_msg->header.stamp).toSec());
+    ROS_DEBUG("Got Matching Image and Disparity delay=%fs", (ros::Time::now()-l_image_msg->header.stamp).toSec());
     cv_bridge::CvImagePtr l_image_ptr;
     cv_bridge::CvImagePtr d_image_ptr;
     try{
@@ -134,7 +134,7 @@ namespace vision{
 
 	float disp_val = average_disparity(d_image, detection_center, 20, 40);
 	if(disp_val<0){
-          ROS_WARN("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
+          ROS_DEBUG("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
 	  cv::ellipse(l_mat, detection_center,
 		      cv::Size(detection.width / 2, detection.height / 2),
 		      0, 0, 360, cv::Scalar(0, 0, 255), 2, 8, 0);
@@ -164,7 +164,7 @@ namespace vision{
 	camera_point.header.stamp = time;
 	tf::pointTFToMsg(position_tf, camera_point.point);
 
-        ROS_INFO("Got detection: In left camera at (%d, %d), disp = %f (%f m)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z);
+        ROS_DEBUG("Got detection: In left camera at (%d, %d), disp = %f (%f m)", (int)detection_center.x, (int)detection_center.y, disp_val, projected_position.z);
 
 	geometry_msgs::PoseWithCovarianceStamped msg;
 	msg.header = camera_point.header;
@@ -204,7 +204,7 @@ namespace vision{
       cv::waitKey(3);
     }
 
-    ROS_INFO("Classification done,  pre: %fs, class: %fs, post: %fs, publish: %fs", (classifier_start-pre_start).toSec(), (post_start-classifier_start).toSec(), (publish_start-post_start).toSec(), (ros::Time::now()-publish_start).toSec());
+    ROS_DEBUG("Classification done,  pre: %fs, class: %fs, post: %fs, publish: %fs", (classifier_start-pre_start).toSec(), (post_start-classifier_start).toSec(), (publish_start-post_start).toSec(), (ros::Time::now()-publish_start).toSec());
   }
 
   float CascadeClassifier::average_disparity(const cv::Mat& disp, const cv::Point2d& pt, int width, int height) {
