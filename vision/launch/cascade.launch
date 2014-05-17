@@ -15,13 +15,23 @@
     <rosparam param="twist0_differential">[false, false, false, false, false, false]</rosparam>
 
     <param name="odom_frame" value="aero/odom"/>
-    <param name="base_link_frame" value="aero/sample_detection"/>
+    <param name="base_link_frame" value="aero/sample_detection_ekf"/>
 
-    <remap from="odometry/filtered" to="object_detection/filtered"/>
+    <remap from="odometry/filtered" to="object_detection/filtered_odom"/>
   </node>
 
 
   <node pkg="vision" type="zero_twist_publisher" name="zero_twist_publisher" ns="aero/lower_stereo" output="screen">
     <remap from="zero_twist" to="object_detection_zero_twist"/>
+  </node>
+
+
+  <node pkg="vision" type="detection_odom_filter_node" name="odom_filter" ns="aero/lower_stereo/object_detection" output="screen">
+    <param name="covar_limit" value="0.2"/>
+    <param name="frame_id" value="aero/odom"/>
+    <param name="child_frame_id" value="aero/sample_detection"/>
+    <param name="invert_tf" value="false"/>
+    <remap from="detection_odom" to="filtered_odom"/>
+    <remap from="detection" to="filtered"/>
   </node>
 </launch>

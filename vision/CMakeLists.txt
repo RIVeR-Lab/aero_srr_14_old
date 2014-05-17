@@ -119,6 +119,11 @@ add_executable(zero_twist_publisher src/zero_twist_publisher.cpp)
 target_link_libraries(zero_twist_publisher ${catkin_LIBRARIES})
 
 
+add_executable(detection_odom_filter_node src/detection_odom_filter.cpp)
+target_link_libraries(detection_odom_filter_node
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##

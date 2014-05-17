@@ -8,6 +8,7 @@ from actionlib.msg import *
 from std_msgs.msg import *
 from geometry_msgs.msg import *
 from jaco_msgs.msg import *
+from jaco_msgs.srv import *
 import math
 import tf2_ros
 import tf
@@ -50,4 +51,48 @@ def create_arm_fingers(base, f1, f2, f3):
 def create_arm_trajectory_state(trajectory):
     goal=TrajectoryGoal(trajectory);
     return smach_ros.SimpleActionState('/aero/jaco/arm_trajectory', TrajectoryAction, goal)
+
+
+class ArmStowState(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded', 'aborted', 'preempted'])
+        self.client = actionlib.SimpleActionClient('/aero/jaco/arm_joint_angles', ArmJointAnglesAction)
+        self.home_client = rospy.ServiceProxy('/aero/jaco/home_arm', HomeArm)
+
+    def execute(self, userdata):
+        rospy.loginfo('Stowing arm')
+
+        rospy.wait_for_service('/aero/jaco/home_arm')
+        self.home_client()
+
+        self.client.wait_for_server()
+
+        goal = ArmJointAnglesGoal()
+        goal.angles.Angle_J1 = 0.0698131701
+        goal.angles.Angle_J2 = -1.57079633
+        goal.angles.Angle_J3 = -0.296705973
+        goal.angles.Angle_J4 = -4.86946861
+        goal.angles.Angle_J5 = 1.36135682
+        goal.angles.Angle_J6 = 2.68780705
+        self.client.send_goal(goal)
+        self.client.wait_for_result()
+        if self.client.get_state() == GoalStatus.ABORTED:
+            return 'aborted';
+        if self.client.get_state() == GoalStatus.PREEMPTED:
+            return 'preempted'
+
+        goal = ArmJointAnglesGoal()
+        goal.angles.Angle_J1 = 0.0698131701
+        goal.angles.Angle_J2 = -2.77507351
+        goal.angles.Angle_J3 = -0.296705973
+        goal.angles.Angle_J4 = -4.86946861
+        goal.angles.Angle_J5 = 1.36135682
+        goal.angles.Angle_J6 = 2.68780705
+        self.client.send_goal(goal)
+        self.client.wait_for_result()
+        if self.client.get_state() == GoalStatus.SUCCEEDED:
+            return 'succeeded';
+        if self.client.get_state() == GoalStatus.PREEMPTED:
+            return 'preempted'
+        return 'aborted';
 

@@ -108,10 +108,6 @@ target_link_libraries(beacon_detector_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(beacon_transform_updater_node src/beacon_transform_updater_node.cpp)
-target_link_libraries(beacon_transform_updater_node
-  ${catkin_LIBRARIES}
-)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

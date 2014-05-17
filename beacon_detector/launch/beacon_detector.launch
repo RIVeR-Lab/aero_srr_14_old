@@ -60,10 +60,16 @@
 
     <param name="odom_frame" value="aero/odom"/>
     <param name="base_link_frame" value="aero/beacon_detection"/>
-    <remap from="odometry/filtered" to="beacon_estimate/filtered"/>
+    <remap from="odometry/filtered" to="beacon_estimate/filtered_odom"/>
   </node>
 
-  <node pkg="beacon_detector" type="beacon_transform_updater_node" name="beacon_transform_updater" ns="aero/upper_stereo" output="screen">
+  <node pkg="vision" type="detection_odom_filter_node" name="beacon_transform_updater" ns="aero/upper_stereo/beacon_estimate" output="screen">
+    <param name="covar_limit" value="0.2"/>
+    <param name="frame_id" value="beacon"/>
+    <param name="child_frame_id" value="aero/odom"/>
+    <param name="invert_tf" value="true"/>
+    <remap from="detection_odom" to="filtered_odom"/>
+    <remap from="detection" to="filtered"/>
   </node>
 
 </launch>
