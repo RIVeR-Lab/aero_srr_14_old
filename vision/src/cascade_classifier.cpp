@@ -7,7 +7,7 @@ namespace vision{
 
   CascadeClassifier::CascadeClassifier(ros::NodeHandle nh, ros::NodeHandle pnh): it_(nh), stereo_model_init_(false), show_windows_(false){
     scale_factor_ = 1.05;
-    min_neighbors_ = 5;
+    min_neighbors_ = 1;
     min_size_ = cv::Size(50, 50);
     max_size_ = cv::Size(150, 150);
     robot_frame_ = "aero/base_footprint";
