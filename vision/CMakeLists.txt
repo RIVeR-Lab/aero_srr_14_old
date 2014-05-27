@@ -104,6 +104,7 @@ include_directories(include
 ## Declare a cpp executable
 add_executable(cascade src/cascade_classifier_SRR.cpp)
 add_executable(image src/staticImagePub.cpp)
+add_executable(change_exp_n_save_aero src/change_exp_n_save_aero.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -162,3 +163,6 @@ target_link_libraries(image
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+
