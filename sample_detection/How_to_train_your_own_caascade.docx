@@ -1,0 +1,40 @@
+﻿How to train your own haar cascade classifier . Source- (type the following in youtube)- " OpenCV Tutorial: Training your own detector | packtpub.com "
+
+STEPS
+
+A. Preparation for Training
+
+1. Crop the images to create positive samples
+2. Create .info file that contains "location" "Number of instances fo the obj of int" "x_coord" "y_coord" "width" "height"
+
+	[ find -name '*.jpg' -exec identify -format '%i 1 0 0 %w %h' \{\} \; > hook.info ]  or .dat
+
+	Example of output ./puck_002.jpg 1 0 0 100 84
+			  ./puck_003.jpg 1 0 0 100 90 ...
+
+3. Create negative.dat file containing location/name of the neg samples - one per line by
+
+	[ ls -1d "$PWD"/* | sort > negative.dat]	
+
+4. Create .vec files by
+
+	[ opencv_createsamples -info hook.info -num 28 -w 20 -h 20 -vec hook.vec ]
+
+5. View the images in the created .vec file by
+
+	[ opencv_createsamples -w 20 -h 20 -vec hook.vec ]    // w & h should exactly match with the ones used in step 4
+
+
+B. Training
+
+6. Create a folder - say "hook_data" and make sure it is empty
+
+7. Perform training by
+ 
+	[ opencv_traincascade -data hook_data -vec sam.vec -bg negatives.dat -numPos 20 -numNeg 176 -numStages 5 -w 20 -h 20 -featureTyp hog ] LBP or haar  . // w and h should exactly match with the ones used in step 4.
+
+8. Set the path to the created cascade.xml (inside hook_data) in the header file of the program
+	
+
+
+

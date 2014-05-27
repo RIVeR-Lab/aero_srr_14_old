@@ -1,17 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(aero_srr_sm)
+project(sample_detection)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  move_base_msgs
-  nav_msgs
-  rospy
-  smach
-  smach_ros
-  tf2
+  cv_bridge
+  image_transport
+  roscpp
+  sensor_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -71,7 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   move_base_msgs#   nav_msgs
+#   sensor_msgs#   std_msgs
 # )
 
 ###################################
@@ -85,9 +83,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES aero_srr_sm
-#  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs rospy smach smach_ros tf2
-#  DEPENDS system_lib
+#  LIBRARIES sample_detection
+  CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
+  DEPENDS system_lib
 )
 
 ###########
@@ -99,22 +97,23 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+include
 )
 
 ## Declare a cpp library
-# add_library(aero_srr_sm
-#   src/${PROJECT_NAME}/aero_srr_sm.cpp
+# add_library(sample_detection
+#   src/${PROJECT_NAME}/sample_detection.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(aero_srr_sm_node src/aero_srr_sm_node.cpp)
+# add_executable(sample_detection_node src/sample_detection_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(aero_srr_sm_node aero_srr_sm_generate_messages_cpp)
+# add_dependencies(sample_detection_node sample_detection_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(aero_srr_sm_node
+# target_link_libraries(sample_detection_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -133,7 +132,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS aero_srr_sm aero_srr_sm_node
+# install(TARGETS sample_detection sample_detection_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -158,10 +157,14 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_aero_srr_sm.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sample_detection.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(cascade_classifier_SRR_hook src/cascade_classifier_SRR_hook.cpp)
+target_link_libraries(cascade_classifier_SRR_hook ${catkin_LIBRARIES})
+
