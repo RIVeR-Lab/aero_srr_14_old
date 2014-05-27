@@ -82,6 +82,7 @@ class CascadeClassifier{
   cv::Size min_size_;
   cv::Size max_size_;
   double object_radius_;
+  float max_disparity_for_detection_;
 
 
   void imageCb(const ImageConstPtr& l_image_msg,

@@ -12,6 +12,7 @@ namespace vision{
     max_size_ = cv::Size(150, 150);
     robot_frame_ = "aero/base_footprint";
     object_radius_ = 0.03;
+    max_disparity_for_detection_ = 98;
 
     std::string cascade_path = "/home/aero/srr/src/aero_srr_14/vision/cascadeTraining4bHookdata/cascade.xml";
 
@@ -132,9 +133,18 @@ namespace vision{
 	cv::Point2d disparity_center(detection_center.x,
 			 detection_center.y+40);
 
+// Find the average disparity of the detection and check if it is invalid or too close (disparity to big)
 	float disp_val = average_disparity(d_image, detection_center, 20, 40);
+	
 	if(disp_val<0){
           ROS_DEBUG("No disparity for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
+	  cv::ellipse(l_mat, detection_center,
+		      cv::Size(detection.width / 2, detection.height / 2),
+		      0, 0, 360, cv::Scalar(0, 0, 255), 2, 8, 0);
+	  continue;
+	}
+	else if(disp_val>max_disparity_for_detection_){
+          ROS_DEBUG("Disparity above max for detection: In left camera at (%d, %d)", (int)detection_center.x, (int)detection_center.y);
 	  cv::ellipse(l_mat, detection_center,
 		      cv::Size(detection.width / 2, detection.height / 2),
 		      0, 0, 360, cv::Scalar(0, 0, 255), 2, 8, 0);
