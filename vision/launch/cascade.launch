@@ -8,6 +8,6 @@
 <remap from="left_image" to="lower_stereo/left/image_raw"/>
 <remap from="right_image" to="lower_stereo/right/image_raw"/>
 
- </node>
+</node>
 
 </launch>
