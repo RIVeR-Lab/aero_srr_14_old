@@ -1,8 +1,21 @@
 <launch>
   <arg name="show_windows" default="false"/>
   <node pkg="vision" type="cascade_classifier_node" name="detector_node" ns="aero/lower_stereo" output="screen">
-    <param name="cascade_path" value="$(find vision)/training/HAAR_cascadetraining4b.xml"/>
     <param name="show_windows" value="$(arg show_windows)"/>
+    <param name="robot_frame" value="aero/base_footprint"/>
+
+    <rosparam param="training" subst_value="True">[
+{id: 0, label: "hook",
+cascade_path: "$(find vision)/training/HAAR_cascadetraining4b.xml",
+object_radius: 0.03,
+scale_factor: 1.01, min_neighbors: 5,
+min_size: {width: 50.0, height: 50.0}, max_size: {width: 150.0, height: 150.0}},
+{id: 1, label: "b",
+cascade_path: "$(find vision)/training/HAAROLD-6-99-200-500.xml",
+object_radius: 0.03,
+scale_factor: 3.0, min_neighbors: 5,
+min_size: {width: 50.0, height: 50.0}, max_size: {width: 150.0, height: 150.0}}
+    ]</rosparam>
   </node>
 
   <node pkg="robot_localization" type="ekf_localization_node" name="detection_ekf" ns="aero/lower_stereo" output="screen">
