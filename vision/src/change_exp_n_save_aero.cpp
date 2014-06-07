@@ -56,8 +56,8 @@ public:
  double Random_do()
     {
         printf("here\n");
-      const double rangeMin = 0.0008;
-      const double rangeMax = 0.004;
+      const double rangeMin = 0.01;  // 0.0008;
+      const double rangeMax = 0.04; // 0.004;
       typedef boost::uniform_real<> NumberDistribution;
       typedef boost::mt19937 RandomNumberGenerator;
       typedef boost::variate_generator<RandomNumberGenerator&, NumberDistribution> Generator;
@@ -95,7 +95,7 @@ public:
             conf.doubles.push_back(double_param);
 
             srv_req.config= conf;
-            ros::service::call("/stereo/left/left_camera/set_parameters", srv_req, srv_resp);
+            ros::service::call("/aero/upper_stereo/left_camera", srv_req, srv_resp);
 
             cv_bridge::CvImagePtr cv_ptr;
 
@@ -112,7 +112,7 @@ public:
 
             time_t now;
             time(&now);
-            cv::imwrite(std::string("/home/aero/Pictures/output_of_change_exp_n_save_aero")+ctime(&now)+".jpg",cv_ptr->image);
+            cv::imwrite(std::string("/home/aero/Pictures/output_of_change_exp_n_save_aero/")+ctime(&now)+".jpg",cv_ptr->image);
 
             cv::imshow(OPENCV_WINDOW_LEFT, cv_ptr->image);
             cv::waitKey(3);
