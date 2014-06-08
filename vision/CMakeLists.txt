@@ -116,6 +116,11 @@ add_executable(change_exp_n_save_aero src/change_exp_n_save_aero.cpp)
 
 target_link_libraries(image 
    ${catkin_LIBRARIES})
+
+
+target_link_libraries(change_exp_n_save_aero ${catkin_LIBRARIES})
+
+
 #############
 ## Install ##
 #############
