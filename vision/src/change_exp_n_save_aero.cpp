@@ -50,7 +50,7 @@ public:
     ~change_exp_n_save_aero()
     {
         cv::destroyWindow(OPENCV_WINDOW_LEFT);
-        //cv::destroyWindow(OPENCV_WINDOW_RIGHT);
+
     }
 
  double Random_do()
